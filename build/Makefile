@@ -1,124 +1,83 @@
-#========================================================================
-# Makefile to compile SUMMA
-#========================================================================
-#
-# Recommended use: Copy this file to Makefile.local, edit it to your
-# heart's content, and then run `make -f build/Makefile.local` from
-# your top level SUMMA directory. Don't include the Makefile.local in
-# any pull requests you make.
-#
-# Note that Makefile configurations that we commonly use can be found on
-# the SUMMA wiki at:
-# https://github.com/NCAR/summa/wiki/SUMMA-Makefile-Part-0-configuration
-# feel free to add yours to that page.
-#
-# To troubleshoot your paths and setup, type 'make check'
-#
-# At a minimum you will need to set the following:
-#  * F_MASTER         - top level summa directory
-#  * FC               - compiler suite
-#  * FC_EXE           - compiler executable
-#  * INCLUDES         - path to include files
-#  * LIBRARIES        - path to and libraries to include
-#
-# Some further options can be specified for OpenMP, etc. See in Part 0 of
-# the Makefile. You don't need to make any changes in PART 1 and
-# following unless you are doing SUMMA development and changed what
-# needs to be compiled
 
-#========================================================================
-# PART 0: User-configurable part
-#========================================================================
+F_MASTER = ../
+FC = mpif90
 
-# The variables can be specified in one of two ways:
-# * delete the '##' in front of the variable, fill out the entry,
-#   save the file and run make
-# * make no changes to this file, but specify the variables in your
-#   environment before you run make
 
-# Define core directory below which everything resides. This is the
-# parent directory of the 'build' directory
-##F_MASTER =
+ifeq ($(mach), xps)
 
-# Define the Fortran Compiler. If you are using gfortran, then this needs
-# to be version 6 or higher. This variable is simply used to select the right
-# compiler flags in the ifeq statements in this Makefile. The compiler
-# executable is set separately as FC_EXE
-# Currently this is either gfortran or ifort
-##FC =
+	EBROOTNETCDFMINFORTRAN=/usr/lib64/gfortran/modules				#PATH for netcdf
+	EBROOTOPENBLAS=/usr/lib64										#PATH for openblas
+	EBROOTOPENMPI=/usr/lib64/openmpi								#PATH for openmpi
+	FC_EXE = /usr/lib64/openmpi/bin/mpif90
+	CC = /usr/bin/gcc
+	INCLUDES = -I/usr/include -I/usr/include/openblas -I$(EBROOTNETCDFMINFORTRAN) -I${EBROOTOPENMPI}/lib
+	LIBRARIES = -L$(EBROOTNETCDFMINFORTRAN) -lnetcdff -L${EBROOTOPENBLAS} -lblas -L${EBROOTOPENBLAS} -lopenblas  -p  -g -O0 
 
-# Define the path for the compiler executable. This is the actual executable
-# that is invoked. For example, FC=gfortran and FC_EXE=/usr/bin-gfortran-mp-6
-# FC and FC_EXE have to be consistent
-##FC_EXE =
+else ifeq ($(mach), cc)
+	FC_EXE = ${EBROOTOPENMPI}/bin/mpif90
+	CC = ${EBROOTGCC}/bin/gcc
 
-# Define the NetCDF and LAPACK libraries and path to include files.
-# INCLUDES needs to be of the form (no quotes around the string):
-# INCLUDES = -I<include path 1> -I<include path 2> -I<...> -I<include path n>
-# LIBRARIES needs to be of the form ( no quotes around the string):
-# LIBRARIES = '-L<netcdf library path> -lnetcdff -L<blas library path> -lblas -L<etc> -l<etc>'
-# If none of this makes sense, please talk to your system
-# administrator.
-##INCLUDES =
-##LIBRARIES =
+	INCLUDES =  -I${EBROOTOPENBLAS}/include -I${EBROOTNETCDFMINFORTRAN}/include -I${EBROOTOPENMPI}/lib
+	LIBRARIES = -L${EBROOTNETCDFMINFORTRAN}/lib -lnetcdff  -L${EBROOTOPENBLAS}/lib -lopenblas  
 
-# Eventually we plan move to a real configure script, but for now we like
-# to keep track of successful compilations of SUMMA on different platforms
-# and with different compilers. If you are successful compiling SUMMA,
-# please add your configuration (operating system and compiler plus
-# part 0 of the Makefile) to the SUMMA wiki on github.
 
-# Define compiler flags. If you use a different compiler,
-# you will need to figure out what the equivalent flags are
-# and may need to update this section
+else ifeq ($(mach), anvil)
 
-# ------------ define compiler flags ----------------------------------------
+	EBROOTOPENMPI=${MPI_HOME}
+	EBROOTGCC=${GCC_HOME}
+	EBROOTOPENBLAS=${OPENBLAS_HOME}
+	EBROOTNETCDFMINFORTRAN=${NETCDF_FORTRAN_HOME}
+
+	FC_EXE = ${EBROOTOPENMPI}/bin/mpif90
+	CC = ${EBROOTGCC}/bin/gcc
+
+	INCLUDES =  -I${EBROOTOPENBLAS}/include -I${EBROOTNETCDFMINFORTRAN}/include -I${EBROOTOPENMPI}/lib
+	LIBRARIES = -L${EBROOTNETCDFMINFORTRAN}/lib -lnetcdff  -L${EBROOTOPENBLAS}/lib -lopenblas  
+
+else ifeq  ($(mach), mac)
+
+
+
+	EBROOTOPENMPI=/Users/guo/homebrew/Cellar/open-mpi/5.0.3_1
+	EBROOTOPENBLAS=/Users/guo/homebrew/Cellar/openblas/0.3.28
+	EBROOTNETCDFMINFORTRAN=/Users/guo/homebrew/Cellar/netcdf-fortran/4.6.1
+
+	FC_EXE = /Users/guo/homebrew/bin/mpif90
+	CC = /Users/guo/homebrew/Cellar/gcc/14.1.0_2/bin/gcc-14
+
+	INCLUDES =  -I${EBROOTOPENBLAS}/include -I${EBROOTNETCDFMINFORTRAN}/include -I${EBROOTOPENMPI}/lib
+	LIBRARIES = -L${EBROOTNETCDFMINFORTRAN}/lib -lnetcdff  -L${EBROOTOPENBLAS}/lib -lopenblas  
+
+else 
+
+
+endif
+
+
 
 # define open MP flags
 isOpenMP =
 FLAGS_OMP =
 LIBOPENMP =
 
-# Define compiler flags. If you use a different compiler,
-# you will need to figure out what the equivalent flags are
-# and may need to update this section
 
-# gfortran compiler flags
-ifeq "$(FC)" "gfortran"
-
-	ifeq "$(isOpenMP)" "yes"
- 		FLAGS_OMP = -fopenmp
-	endif
-
-# Production runs
-FLAGS_NOAH = -O3 -ffree-form -ffree-line-length-none -fmax-errors=0 $(FLAGS_OMP)
-FLAGS_COMM = -O3 -ffree-line-length-none -fmax-errors=0 $(FLAGS_OMP)
-FLAGS_SUMMA = -O3 -ffree-line-length-none -fmax-errors=0 $(FLAGS_OMP)
+ifeq ($(mode), debug)
 
 # Debug runs
-#FLAGS_NOAH = -p -g -ffree-form -ffree-line-length-none -fmax-errors=0 -fbacktrace -Wno-unused -Wno-unused-dummy-argument
-#FLAGS_COMM = -p -g -Wall -ffree-line-length-none -fmax-errors=0 -fbacktrace -fcheck=bounds
-#FLAGS_SUMMA = -p -g -Wall -ffree-line-length-none -fmax-errors=0 -fbacktrace -fcheck=bounds
+FLAGS_NOAH  = -p  -g -O0 -ffree-form -ffree-line-length-none -fmax-errors=0 -fbacktrace -Wno-unused -Wno-unused-dummy-argument
+FLAGS_COMM  = -p  -g -O0 -Wall -ffree-line-length-none -fmax-errors=0 -fbacktrace -fcheck=bounds 
+FLAGS_SUMMA = -p  -g -O0 -Wall -ffree-line-length-none -fmax-errors=0 -fbacktrace -fcheck=bounds
+
+else 
+
+FLAGS_NOAH = -O3 -ffree-form -ffree-line-length-none -fmax-errors=0 
+FLAGS_COMM = -O3 -ffree-line-length-none -fmax-errors=0 
+FLAGS_SUMMA = -O3 -ffree-line-length-none -fmax-errors=0
 
 endif
 
-# ifort compiler flags
-ifeq "$(FC)" "ifort"
 
-	ifeq "$(isOpenMP)" "yes"
- 		FLAGS_OMP = -qopenmp
-	endif
 
-# Production runs
-FLAGS_NOAH = -O3 -noerror_limit -FR -auto -fltconsistency $(FLAGS_OMP)
-FLAGS_COMM = -O3 -FR -auto -fltconsistency -fpe0 $(FLAGS_OMP)
-FLAGS_SUMMA = -O3 -FR -auto -fltconsistency -fpe0 $(FLAGS_OMP)
-
-# Debug runs
-#FLAGS_NOAH = -O0 -p -g -warn nounused -noerror_limit -FR -auto -WB -traceback -fltconsistency
-#FLAGS_COMM = -O0 -p -g -debug -warn all -check all -FR -auto -WB -traceback -fltconsistency -fpe0
-#FLAGS_SUMMA = -O0 -p -g -debug -warn all -check all -FR -auto -WB -traceback -fltconsistency -fpe0
-endif
 
 #========================================================================
 # PART 1: Define directory paths
@@ -148,6 +107,18 @@ ENGINE_DIR = $(F_KORE_DIR)/engine
 
 #  utilities
 SUMMA_NRUTIL= \
+		summa_mpi.f90 \
+		external/kinds_module.F90 \
+		external/utilities_module.f90 \
+		external/dsm_module.f90 \
+		external/diff_module.f90 \
+		external/cache_module.f90 \
+		external/numerical_differentiation_module.f90 \
+		ode.f90\
+		rksuite.f90\
+		minpack.f90\
+		minpack_capi.f90\
+		numSolver.f90 \
 		nrtype.f90 \
 		f2008funcs.f90 \
 		nr_utility.f90
@@ -292,6 +263,16 @@ SUMMA_DRIVER= \
 		summa_forcing.f90 \
 		summa_modelRun.f90 \
 		summa_writeOutput.f90 \
+		lake/data_parameters.f90\
+		lake/flake_configure.f90\
+		lake/flake_derivedtypes.f90\
+		lake/flake_parameters.f90\
+		lake/flake_albedo_ref.f90\
+		lake/flake_paramoptic_ref.f90\
+		lake/flake.f90\
+		lake/SfcFlx.f90\
+		lake/src_flake_interface_1D.f90\
+		subGridLake.f90 \
 		summa_driver.f90
 DRIVER = $(patsubst %, $(DRIVER_DIR)/%, $(SUMMA_DRIVER))
 
