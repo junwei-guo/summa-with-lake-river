@@ -108,17 +108,6 @@ ENGINE_DIR = $(F_KORE_DIR)/engine
 #  utilities
 SUMMA_NRUTIL= \
 		summa_mpi.f90 \
-		external/kinds_module.F90 \
-		external/utilities_module.f90 \
-		external/dsm_module.f90 \
-		external/diff_module.f90 \
-		external/cache_module.f90 \
-		external/numerical_differentiation_module.f90 \
-		ode.f90\
-		rksuite.f90\
-		minpack.f90\
-		minpack_capi.f90\
-		numSolver.f90 \
 		nrtype.f90 \
 		f2008funcs.f90 \
 		nr_utility.f90
