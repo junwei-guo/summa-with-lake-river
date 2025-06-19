@@ -65,7 +65,7 @@ contains
  USE ascii_util_module,only:file_open       ! function to open file
  USE ascii_util_module,only:linewidth       ! max character number for one line
  USE ascii_util_module,only:get_vlines      ! function to get a vector of non-comment lines
-
+ USE summa_mpi
  implicit none
 
  ! input/output vars
@@ -105,7 +105,7 @@ contains
   read(charline(iControl),*,iostat=err) option, varEntry
   if (err/=0) then; err=30; message=trim(message)//"error reading charline array"; return; end if
   ! get the index of the control file entry in the data structure
-  write(*,'(i4,1x,a)') iControl, trim(option)//': '//trim(varEntry)
+  if(idx_rank==0)then; write(*,'(i4,1x,a)') iControl, trim(option)//': '//trim(varEntry); end if
 
   ! assign entries from control file to module public variables; add checking as needed
   select case(trim(option))
@@ -146,8 +146,8 @@ contains
  open(runinfo_fileunit,file=trim(OUTPUT_PATH)//"runinfo.txt",iostat=err)
  if(err/=0)then; err=10; message=trim(message)//"cannot write to output directory '"//trim(OUTPUT_PATH)//"'"; return; end if
  call date_and_time(cdate,ctime)
- write(runinfo_fileunit,*) 'Run start time on system:  ccyy='//cdate(1:4)//' - mm='//cdate(5:6)//' - dd='//cdate(7:8), &
-                         ' - hh='//ctime(1:2)//' - mi='//ctime(3:4)//' - ss='//ctime(5:10)
+ if(idx_rank==0)then; write(runinfo_fileunit,*) 'Run start time on system:  ccyy='//cdate(1:4)//' - mm='//cdate(5:6)//' - dd='//cdate(7:8), &
+                         ' - hh='//ctime(1:2)//' - mi='//ctime(3:4)//' - ss='//ctime(5:10); end if 
  close(runinfo_fileunit)
 
  end subroutine summa_SetTimesDirsAndFiles
