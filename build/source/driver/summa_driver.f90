@@ -44,6 +44,7 @@ USE globalData, only: data_step                             ! Time step size
 USE MPI
 USE summa_mpi
 USE SubGridLake
+USE route_interface
 ! USE SingleLake
 ! USE globalData,only:gru_struc                              ! gru->hru mapping structure
 ! USE globalData,only:index_map                              ! hru->gru mapping structure
@@ -170,5 +171,7 @@ if(driver_err==0)then
 endif
 call MPI_Finalize(mpi_err)
 
+! Stand alone mode routing scheme running
+call stand_alone_run()
 stop 
 end program summa_driver

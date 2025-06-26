@@ -1,7 +1,7 @@
 
 F_MASTER = ../
 FC = mpif90
-
+ROUTING = /home/guo/Dropbox/summampi/summaSource/mizuRoute-in-summa/route/build
 
 ifeq ($(mach), xps)
 
@@ -50,6 +50,14 @@ else ifeq  ($(mach), mac)
 
 else 
 
+	# Same as xps
+	EBROOTNETCDFMINFORTRAN=/usr/lib64/gfortran/modules				#PATH for netcdf
+	EBROOTOPENBLAS=/usr/lib64										#PATH for openblas
+	EBROOTOPENMPI=/usr/lib64/openmpi								#PATH for openmpi
+	FC_EXE = /usr/lib64/openmpi/bin/mpif90
+	CC = /usr/bin/gcc
+	INCLUDES = -I/usr/include -I/usr/include/openblas -I$(EBROOTNETCDFMINFORTRAN) -I${EBROOTOPENMPI}/lib
+	LIBRARIES = -L$(EBROOTNETCDFMINFORTRAN) -lnetcdff -L${EBROOTOPENBLAS} -lblas -L${EBROOTOPENBLAS} -lopenblas  -p  -g -O0 
 
 endif
 
@@ -76,9 +84,14 @@ FLAGS_SUMMA = -O3 -ffree-line-length-none -fmax-errors=0
 
 endif
 
+#MUST include mizuRoute path
+FLAGS_SUMMA+=-I${ROUTING} 
 
+#Option 1: include mizuRoute .o and .mod files
+#INCLUDES+=-I${ROUTING} 
 
-
+#Option 2: link static libraries
+LIBRARIES+=$(ROUTING)/libmizuroute.a
 #========================================================================
 # PART 1: Define directory paths
 #========================================================================
@@ -339,6 +352,9 @@ compile_summa: update_version
 	$(INCLUDES)
 
 # link routines
+# link:
+# 	$(FC_EXE) -g *.o ${ROUTING}/src/*.o $(LIBRARIES) -o $(DRIVER__EX)
+
 link:
 	$(FC_EXE) -g *.o $(LIBRARIES) -o $(DRIVER__EX)
 
