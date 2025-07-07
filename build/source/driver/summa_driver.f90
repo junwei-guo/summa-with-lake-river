@@ -109,8 +109,9 @@ do modelTimeStep=1,numtim
 
   if (mpiSyncTime>0) then
     if (mod(modelTimeStep*data_step/3600, mpiSyncTime)==0) then
-      call mpi_print("Synchronizing every "//trim(dou2str(mpiSyncTime))//' hours.',0)
-      call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
+      !call mpi_print("Synchronizing every "//trim(dou2str(mpiSyncTime))//' hours.',0)
+            if (idx_rank==0)   print *, "Synchronizing every "//trim(dou2str(mpiSyncTime))//' hours.'
+	call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
     end if
   endif 
 
