@@ -96,6 +96,7 @@ contains
  ! Noah-MP parameters
  USE NOAHMP_VEG_PARAMETERS,only:SAIM,LAIM                    ! 2-d tables for stem area index and leaf area index (vegType,month)
  USE NOAHMP_VEG_PARAMETERS,only:HVT,HVB                      ! height at the top and bottom of vegetation (vegType)
+ USE summa_mpi
  ! ---------------------------------------------------------------------------------------
  ! * variables
  ! ---------------------------------------------------------------------------------------
@@ -359,7 +360,7 @@ contains
        &                        rsmax_data, salp_data, sbeta_data, &
        &                        zbot_data, smhigh_data, smlow_data, &
        &                        lucats, topt_data, slcats, slpcats, sltype
-
+   USE summa_mpi
   IMPLICIT NONE
 
   CHARACTER(LEN=*), INTENT(IN) :: FILENAME_VEGTABLE, FILENAME_SOILTABLE, FILENAME_GENERAL
@@ -413,7 +414,8 @@ contains
         ! CALL wrf_message( mess )
         LUMATCH=1
      ELSE
-        call wrf_message ( "Skipping over LUTYPE = " // TRIM ( LUTYPE ) )
+      if (idx_rank==0) then; call wrf_message ( "Skipping over LUTYPE = " // TRIM ( LUTYPE ) ); end if
+      !call wrf_message ( "Skipping over LUTYPE = " // TRIM ( LUTYPE ) )
         DO LC = 1, LUCATS+12
            read(19,*)
         ENDDO
@@ -495,7 +497,7 @@ contains
      ! CALL wrf_message ( mess )
      LUMATCH=1
    ELSE
-    call wrf_message ( "Skipping over SLTYPE = " // TRIM ( SLTYPE ) )
+    if (idx_rank == 0) then; call wrf_message ( "Skipping over SLTYPE = " // TRIM ( SLTYPE ) ); end if
     DO LC = 1, SLCATS
      read(19,*)
     ENDDO

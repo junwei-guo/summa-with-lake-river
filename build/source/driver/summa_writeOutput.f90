@@ -57,6 +57,7 @@ USE var_lookup,only:iLookDIAG                 ! named variables for local column
 USE var_lookup,only:iLookPROG                 ! named variables for local column model prognostic variables
 USE var_lookup,only:iLookINDEX                ! named variables for local column index variables
 USE var_lookup,only:iLookFreq                 ! named variables for the frequency structure
+USE summa_mpi
 
 ! safety: set private unless specified otherwise
 implicit none
@@ -198,7 +199,7 @@ contains
  if(err/=0)then; message=trim(message)//trim(cmessage); return; endif
 
  ! print progress
- if(printProgress) write(*,'(i4,1x,5(i2,1x))') timeStruct%var(1:5)
+ if(printProgress .and. (idx_rank==0)) write(*,'(i4,1x,5(i2,1x))') timeStruct%var(1:5)
 
  ! *****************************************************************************
  ! *** define summa output files

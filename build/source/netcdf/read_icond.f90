@@ -170,7 +170,7 @@ contains
  USE data_types,only:var_info                           ! metadata
  USE get_ixName_module,only:get_varTypeName             ! to access type strings for error messages
  USE updatState_module,only:updateSoil                  ! update soil states
-
+ USE summa_mpi
  implicit none
 
  ! --------------------------------------------------------------------------------------------------------
@@ -398,7 +398,7 @@ contains
   ! get dimension of time delay histogram (TDH) from initial conditions file
   err = nf90_inq_dimid(ncID,"tdh",dimID);
   if(err/=nf90_noerr)then
-   write(*,*) 'WARNING: routingRunoffFuture is not in the initial conditions file ... using zeros'  ! previously created in var_derive.f90
+  if (idx_rank==0) then;write(*,*) 'WARNING: routingRunoffFuture is not in the initial conditions file ... using zeros'; end if  ! previously created in var_derive.f90
    err=nf90_noerr    ! reset this err
 
   else

@@ -39,6 +39,10 @@ USE summa_util, only: stop_program                          ! used to stop the s
 USE summa_util, only: handle_err                            ! used to process errors
 ! global data
 USE globalData, only: numtim                                ! number of model time steps
+USE globalData, only: mpiSyncTime                           ! MPI sync days 
+USE globalData, only: data_step                             ! Time step size
+USE MPI
+USE summa_mpi
 implicit none
 
 ! *****************************************************************************
@@ -54,6 +58,24 @@ integer(i4b)                       :: modelTimeStep              ! index of mode
 integer(i4b)                       :: err=0                      ! error code
 character(len=1024)                :: message=''                 ! error message
 
+real    :: start_time, end_time, end_time_each_rank
+integer :: driver_err
+
+!Pause for MPI debugging
+!print *, "Sleeping for 30s .."
+!call sleep(30)
+
+  ! Initialize MPI
+call MPI_Init(mpi_err)
+call MPI_Comm_size(MPI_COMM_WORLD, num_rank, mpi_err)
+call MPI_Comm_rank(MPI_COMM_WORLD, idx_rank, mpi_err)
+call mpi_print("MPI has been initilized with "//trim(num2str(num_rank))//" ranks.", 0)
+start_time = MPI_Wtime()
+
+if (idx_rank == 1) then 
+  !Pause a rank for debugging purpose.
+  !call sleep(999999)
+endif 
 ! *****************************************************************************
 ! * preliminaries
 ! *****************************************************************************
@@ -85,6 +107,13 @@ call handle_err(err, message)
 ! loop through time
 do modelTimeStep=1,numtim
 
+  if (mpiSyncTime>0) then
+    if (mod(modelTimeStep*data_step/3600, mpiSyncTime)==0) then
+      call mpi_print("Synchronizing every "//trim(dou2str(mpiSyncTime))//' hours.',0)
+      call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
+    end if
+  endif 
+
  ! read model forcing data
  call summa_readForcing(modelTimeStep, summa1_struc(n), err, message)
  call handle_err(err, message)
@@ -99,6 +128,26 @@ do modelTimeStep=1,numtim
 
 end do  ! looping through time
 
-! successful end
-call stop_program(0, 'finished simulation successfully.')
+driver_err = 0 
+call stop_program(driver_err, '')
+
+end_time_each_rank = MPI_Wtime()
+
+print *, "MPI rank@", idx_rank," has finished the process. Time taken:", end_time_each_rank - start_time, " (s). Waiting for other processes to be completed..."
+
+
+call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
+end_time = MPI_Wtime()
+if (idx_rank == 0) then
+  print *, 'Total time taken: ', end_time - start_time, ' seconds with ', num_rank, " ranks."
+end if
+
+if(driver_err==0)then
+  call mpi_print("FORTRAN STOP: main program stoped successfully.",0)
+ else
+  call mpi_print("FATAL ERROR:  main program stoped successfully.",0)
+endif
+call MPI_Finalize(mpi_err)
+
+stop 
 end program summa_driver

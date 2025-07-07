@@ -730,6 +730,7 @@ contains
  USE ascii_util_module,only:linewidth          ! match character number for one line
  USE ascii_util_module,only:get_vlines         ! get a vector of non-comment lines
  USE ascii_util_module,only:split_line         ! split a line into words
+ USE summa_mpi
  implicit none
 
  ! dummy variables
@@ -838,7 +839,7 @@ contains
 
   ! id variables should not be specified in output control file
   if (trim(structName)=='id')then
-   print*,'id variable requested in outputControl, will be skipped: variable='//trim(varName)
+   if (idx_rank==0) then; print*,'id variable requested in outputControl, will be skipped: variable='//trim(varName); end if
    cycle
   end if
 

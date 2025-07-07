@@ -298,6 +298,7 @@ MODULE globalData
  real(rkind),save,public                        :: dJulianStart                ! julian day of start time of simulation
  real(rkind),save,public                        :: dJulianFinsh                ! julian day of end time of simulation
  real(rkind),save,public                        :: tmZoneOffsetFracDay         ! time zone offset in fractional days
+ real,save,public                               :: mpiSyncTime                 ! MPI sync hours
  integer(i4b),save,public                    :: nHRUfile                    ! number of HRUs in the file
  integer(i4b),save,public                    :: yearLength                  ! number of days in the current year
  integer(i4b),save,public                    :: urbanVegCategory            ! vegetation category for urban areas

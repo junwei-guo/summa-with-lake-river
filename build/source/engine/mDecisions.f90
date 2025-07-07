@@ -21,6 +21,7 @@
 module mDecisions_module
 USE nrtype
 USE var_lookup, only: maxvarDecisions  ! maximum number of decisions
+USE summa_mpi
 implicit none
 private
 public::mDecisions
@@ -169,6 +170,7 @@ contains
  USE var_lookup,only:iLookDECISIONS         ! named variables for elements of the decision structure
  ! forcing metadata
  USE globalData,only:forc_meta              ! metadata structures
+ USE globalData,only:mpiSyncTime            ! MPI Sync Frequency
  USE var_lookup,only:iLookFORCE             ! named variables to define structure elements
  ! Noah-MP decision structures
  USE noahmp_globals,only:DVEG               ! decision for dynamic vegetation
@@ -278,8 +280,8 @@ contains
  if(err/=0)then; err=20; message=trim(message)//trim(cmessage); return; end if
 
  ! check start and finish time
- write(*,'(a,i4,1x,4(i2,1x))') 'startTime: iyyy, im, id, ih, imin = ', startTime%var(1:5)
- write(*,'(a,i4,1x,4(i2,1x))') 'finshTime: iyyy, im, id, ih, imin = ', finshTime%var(1:5)
+ if (idx_rank==0) then;write(*,'(a,i4,1x,4(i2,1x))') 'startTime: iyyy, im, id, ih, imin = ', startTime%var(1:5); end if 
+ if (idx_rank==0) then;write(*,'(a,i4,1x,4(i2,1x))') 'finshTime: iyyy, im, id, ih, imin = ', finshTime%var(1:5); end if
 
  ! check that simulation end time is > start time
  if(dJulianFinsh < dJulianStart)then; err=20; message=trim(message)//'end time of simulation occurs before start time'; return; end if
@@ -289,7 +291,7 @@ contains
 
  ! compute the number of time steps
  numtim = nint( (dJulianFinsh - dJulianStart)*secprday/data_step ) + 1
- write(*,'(a,1x,i10)') 'number of time steps = ', numtim
+ if (idx_rank==0) then;write(*,'(a,1x,i10)') 'number of time steps = ', numtim; end if
 
  ! -------------------------------------------------------------------------------------------------
 
@@ -628,6 +630,14 @@ contains
    err=10; message=trim(message)//"unknown option for snow unloading [option="//trim(model_decisions(iLookDECISIONS%snowUnload)%cDecision)//"]"; return
  end select
 
+ !MPI barrier synchronization frequency, unit day. if value is missing or negative, no synchronization 
+ if (model_decisions(iLookDECISIONS%mpiSyncFreq)%cOption == 'mpiSyncFreq') then
+    ! Option detected in the mDecision file, read MPI syncing value.
+    read(model_decisions(iLookDECISIONS%mpiSyncFreq)%cDecision,*) mpiSyncTime
+    model_decisions(iLookDECISIONS%mpiSyncFreq)%iDecision = mpiSyncTime
+ else
+    mpiSyncTime = -1.0
+ endif
 
  ! -----------------------------------------------------------------------------------------------------------------------------------------------
  ! check for consistency among options
@@ -720,7 +730,7 @@ contains
  err=0; message='readoption/'
  ! build filename
  infile = trim(SETTINGS_PATH)//trim(M_DECISIONS)
- write(*,'(2(a,1x))') 'decisions file = ', trim(infile)
+ if (idx_rank==0) then; write(*,'(2(a,1x))') 'decisions file = ', trim(infile); end if
  ! open file
  call file_open(trim(infile),unt,err,cmessage)
  if(err/=0)then; message=trim(message)//trim(cmessage); return; end if
@@ -738,7 +748,7 @@ contains
   if (err/=0) then; err=30; message=trim(message)//"errorReadLine"; return; end if
   ! get the index of the decision in the data structure
   iVar = get_ixdecisions(trim(option))
-  write(*,'(i4,1x,a)') iDecision, trim(option)//': '//trim(decision)
+  if (idx_rank==0) then; write(*,'(i4,1x,a)') iDecision, trim(option)//': '//trim(decision);end if 
   if(iVar<=0)then; err=40; message=trim(message)//"cannotFindDecisionIndex[name='"//trim(option)//"']"; return; end if
   ! populate the model decisions structure
   model_decisions(iVar)%cOption   = trim(option)

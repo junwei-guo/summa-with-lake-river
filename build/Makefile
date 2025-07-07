@@ -38,19 +38,20 @@
 
 # Define core directory below which everything resides. This is the
 # parent directory of the 'build' directory
-##F_MASTER =
+F_MASTER = ../
 
 # Define the Fortran Compiler. If you are using gfortran, then this needs
 # to be version 6 or higher. This variable is simply used to select the right
 # compiler flags in the ifeq statements in this Makefile. The compiler
 # executable is set separately as FC_EXE
 # Currently this is either gfortran or ifort
-##FC =
+FC = gfortran
 
 # Define the path for the compiler executable. This is the actual executable
 # that is invoked. For example, FC=gfortran and FC_EXE=/usr/bin-gfortran-mp-6
 # FC and FC_EXE have to be consistent
-##FC_EXE =
+FC_EXE =${EBROOTGCC}/bin/gfortran
+CC = ${EBROOTGCC}/bin/gcc
 
 # Define the NetCDF and LAPACK libraries and path to include files.
 # INCLUDES needs to be of the form (no quotes around the string):
@@ -59,8 +60,8 @@
 # LIBRARIES = '-L<netcdf library path> -lnetcdff -L<blas library path> -lblas -L<etc> -l<etc>'
 # If none of this makes sense, please talk to your system
 # administrator.
-##INCLUDES =
-##LIBRARIES =
+INCLUDES = -I$(EBROOTNETCDFMINFORTRAN)/include -I$(EBROOTOPENBLAS)/include
+LIBRARIES = -L$(EBROOTNETCDFMINFORTRAN)/lib -lnetcdff -L$(EBROOTOPENBLAS)/lib -lopenblas
 
 # Eventually we plan move to a real configure script, but for now we like
 # to keep track of successful compilations of SUMMA on different platforms

@@ -60,6 +60,7 @@ contains
  USE globalData,only: ixProgress        ! define frequency to write progress
  USE globalData,only: ixRestart         ! define frequency to write restart files
  USE globalData,only: output_fileSuffix ! suffix for the output file
+ USE summa_mpi
  implicit none
  ! dummy variables
  type(summa1_type_dec),intent(inout)   :: summa1_struc        ! master summa data structure
@@ -115,6 +116,15 @@ contains
  newOutputFile = noNewFiles
  iRunMode = iRunModeFull
 
+ !----------------------
+ !
+ ! MPI: iRunMode must be GRUs when number rank > 2
+ !
+ !----------------------
+ if (num_rank>1) then
+  iRunMode=iRunModeGRU
+ end if 
+
  ! loop through all command arguments
  nLocalArgument = 0
  do iArgument = 1,nArgument
@@ -130,7 +140,7 @@ contains
     endif
     ! get name of master control file
     summaFileManagerFile=trim(argString(iArgument+1))
-    print "(A)", "file_master is '"//trim(summaFileManagerFile)//"'."
+    if(idx_rank==0)then; print "(A)", "file_master is '"//trim(summaFileManagerFile)//"'."; end if
 
    ! define the formation of new output files
    case ('-n', '--newFile')
@@ -341,6 +351,7 @@ contains
  USE globalData,only: elapsedRead                      ! elapsed time for the data read
  USE globalData,only: elapsedWrite                     ! elapsed time for the stats/write
  USE globalData,only: elapsedPhysics                   ! elapsed time for the physics
+ USE MPI
  implicit none
  ! define dummy variables
  integer(i4b),intent(in)            :: err             ! error code
@@ -351,7 +362,11 @@ contains
  integer(i4b)                       :: localErr        ! local error code
  integer(i4b)                       :: iFreq           ! loop through output frequencies
  real(rkind)                           :: elpSec          ! elapsed seconds
+ integer ::  num_rank, idx_rank, mpi_err
 
+
+ call MPI_Comm_size(MPI_COMM_WORLD, num_rank, mpi_err)
+ call MPI_Comm_rank(MPI_COMM_WORLD, idx_rank, mpi_err)
  ! close any remaining output files
  ! NOTE: use the direct NetCDF call with no error checking since the file may already be closed
  do iFreq = 1,size(ncid)
@@ -361,6 +376,10 @@ contains
  ! get the final date and time
  call date_and_time(values=endModelRun)
  elpSec = elapsedSec(startInit,endModelRun)
+
+if (idx_rank==0) then
+
+  print *,"Time statstics from rank #0 only:"
 
  ! print initial and final date and time
  write(outunit,"(/,A,I4,'-',I2.2,'-',I2.2,2x,I2,':',I2.2,':',I2.2,'.',I3.3)") 'initial date/time = ',startInit(1:3),  startInit(5:8)
@@ -396,17 +415,19 @@ contains
  write(outunit,"(A,1PG15.7,A)")                                               '       or           ', elpSec/3600_rkind,        ' h'
  write(outunit,"(A,1PG15.7,A/)")                                              '       or           ', elpSec/86400_rkind,       ' d'
 
+end if
  ! print the number of threads
- write(outunit,"(A,i10,/)")                                                   '   number threads = ', nThreads
+ !write(outunit,"(A,i10,/)")                                                   '   number threads = ', nThreads
 
+ !MPI note: only stop program after MPI_Finalize().
  ! stop with message
- if(err==0)then
-  print*,'FORTRAN STOP: '//trim(message)
-  stop
- else
-  print*,'FATAL ERROR: '//trim(message)
-  stop 1
- endif
+!  if(err==0)then
+!   print*,'FORTRAN STOP: '//trim(message)
+!   stop
+!  else
+!   print*,'FATAL ERROR: '//trim(message)
+!   stop 1
+!  endif
 
  end subroutine
 
