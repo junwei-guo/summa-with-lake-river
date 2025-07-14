@@ -12,13 +12,13 @@ USE dataTypes, only : var_info             ! metadata
 USE public_var
 
 ! metadata on data structures
-USE globalData, only : meta_struct         ! structure information
-USE globalData, only : meta_dims           ! dimension information
-USE globalData, only : meta_HRU            ! HRU properties
-USE globalData, only : meta_HRU2SEG        ! HRU-to-segment mapping
-USE globalData, only : meta_SEG            ! stream segment properties
-USE globalData, only : meta_NTOPO          ! network topology
-USE globalData, only : meta_PFAF           ! network topology
+USE globalData_mizuRoute, only : meta_struct         ! structure information
+USE globalData_mizuRoute, only : meta_dims           ! dimension information
+USE globalData_mizuRoute, only : meta_HRU            ! HRU properties
+USE globalData_mizuRoute, only : meta_HRU2SEG        ! HRU-to-segment mapping
+USE globalData_mizuRoute, only : meta_SEG            ! stream segment properties
+USE globalData_mizuRoute, only : meta_NTOPO          ! network topology
+USE globalData_mizuRoute, only : meta_PFAF           ! network topology
 
 ! named variables
 USE var_lookup,only:ixStruct, nStructures  ! index of data structures
@@ -36,8 +36,8 @@ USE io_netcdf, only: close_nc              ! close netcdf
 USE io_netcdf, only: write_nc
 
 ! external utilities
-USE nr_utility_module, ONLY: indexx  ! Num. Recipies utilities
-USE nr_utility_module, ONLY: arth    ! Num. Recipies utilities
+USE nr_utility_module_mizuRoute, ONLY: indexx  ! Num. Recipies utilities
+USE nr_utility_module_mizuRoute, ONLY: arth    ! Num. Recipies utilities
 
 implicit none
 

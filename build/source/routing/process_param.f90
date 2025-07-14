@@ -29,7 +29,7 @@ CONTAINS
   ! MODULE reach_flux -- runoff fractions stored in FRAC_FUTURE(:)
   ! ---------------------------------------------------------------------------------------
   USE gamma_func_module, ONLY : gammp                   ! interface for the incomplete gamma function
-  USE globalData,        ONLY : FRAC_FUTURE             ! fraction of runoff in future time steps
+  USE globalData_mizuRoute,        ONLY : FRAC_FUTURE             ! fraction of runoff in future time steps
 
   implicit none
   ! Argument variables
@@ -116,7 +116,7 @@ CONTAINS
  ! ----------------------------------------------------------------------------------------
   USE public_var, ONLY: pi      ! pi
   USE dataTypes,  ONLY: dlength
-  USE globalData, ONLY: maxtdh  ! maximum unit-hydrogrph future time
+  USE globalData_mizuRoute, ONLY: maxtdh  ! maximum unit-hydrogrph future time
 
   implicit none
   ! Argument variables

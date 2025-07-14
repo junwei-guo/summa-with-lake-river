@@ -6,7 +6,7 @@ USE dataTypes, ONLY: var_ilength             ! integer type:          var(:)%dat
 USE dataTypes, ONLY: var_clength             ! integer type:          var(:)%dat
 USE dataTypes, ONLY: var_dlength,dlength     ! double precision type: var(:)%dat, or dat
 ! global vars
-USE globalData, ONLY: onRoute                ! logical to indicate which routing method(s) is on
+USE globalData_mizuRoute, ONLY: onRoute                ! logical to indicate which routing method(s) is on
 USE public_var, ONLY: idSegOut               ! ID for stream segment at the bottom of the subset
 ! options
 USE public_var, ONLY: topoNetworkOption      ! option to compute network topology
@@ -63,8 +63,8 @@ CONTAINS
  USE network_topo,    ONLY : reach_list            ! reach list
  USE network_topo,    ONLY : reach_mask            ! identify all reaches upstream of a given reach
  USE routing_param,   ONLY : make_uh               ! construct reach unit hydrograph
- USE globalData,      ONLY : mann_n, wscale        ! KWT routing parameters (Transfer function parameters)
- USE globalData,      ONLY : velo, diff            ! IRF routing parameters (Transfer function parameters)
+ USE globalData_mizuRoute,      ONLY : mann_n, wscale        ! KWT routing parameters (Transfer function parameters)
+ USE globalData_mizuRoute,      ONLY : velo, diff            ! IRF routing parameters (Transfer function parameters)
  USE public_var,      ONLY : dt_sim                ! simulation time step [sec]
 
  implicit none
@@ -369,7 +369,7 @@ END SUBROUTINE augment_ntopo
 
   USE dataTypes,     ONLY : RCHPRP             ! Reach parameters
   USE dataTypes,     ONLY : RCHTOPO            ! Network topology
-  USE globalData,    ONLY : fshape, tscale     ! basin IRF routing parameters (Transfer function parameters)
+  USE globalData_mizuRoute,    ONLY : fshape, tscale     ! basin IRF routing parameters (Transfer function parameters)
   USE public_var,    ONLY : min_slope          ! minimum slope
   USE public_var,    ONLY : dt_sim             ! simulation time step [sec]
   USE routing_param, ONLY : basinUH            ! construct basin unit hydrograph

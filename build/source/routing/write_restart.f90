@@ -13,7 +13,7 @@ USE io_netcdf, ONLY: end_def                ! end defining netcdf
 USE io_netcdf, ONLY: open_nc                ! open netcdf
 USE io_netcdf, ONLY: close_nc               ! close netcdf
 USE io_netcdf, ONLY: write_nc
-USE globalData, ONLY: onRoute               ! logical to indicate which routing method(s) is on
+USE globalData_mizuRoute, ONLY: onRoute               ! logical to indicate which routing method(s) is on
 USE public_var, ONLY: iulog                 ! i/o logical unit number
 USE public_var, ONLY: integerMissing
 USE public_var, ONLY: realMissing
@@ -41,7 +41,7 @@ CONTAINS
  ! *********************************************************************
  SUBROUTINE main_restart(ierr, message)
 
-  USE globalData, ONLY: restartAlarm   ! logical to make alarm for restart writing
+  USE globalData_mizuRoute, ONLY: restartAlarm   ! logical to make alarm for restart writing
 
   implicit none
   ! output variables
@@ -68,14 +68,14 @@ CONTAINS
  ! *********************************************************************
  SUBROUTINE restart_alarm(ierr, message)
 
-   USE ascii_util_module, ONLY: lower
+   USE ascii_util_module_mizuRoute, ONLY: lower
    USE public_var,        ONLY: calendar
    USE public_var,        ONLY: restart_write  ! restart write options
    USE public_var,        ONLY: restart_day
-   USE globalData,        ONLY: restartAlarm   ! logical to make alarm for restart writing
-   USE globalData,        ONLY: restDatetime   ! restart Calendar time
-   USE globalData,        ONLY: dropDatetime   ! restart drop off Calendar time
-   USE globalData,        ONLY: simDatetime    ! previous and current model time
+   USE globalData_mizuRoute,        ONLY: restartAlarm   ! logical to make alarm for restart writing
+   USE globalData_mizuRoute,        ONLY: restDatetime   ! restart Calendar time
+   USE globalData_mizuRoute,        ONLY: dropDatetime   ! restart drop off Calendar time
+   USE globalData_mizuRoute,        ONLY: simDatetime    ! previous and current model time
 
    implicit none
 
@@ -125,8 +125,8 @@ CONTAINS
  ! *********************************************************************
  SUBROUTINE restart_output(ierr, message)
 
-  USE globalData, ONLY: TSEC
-  USE globalData, ONLY: reachID
+  USE globalData_mizuRoute, ONLY: TSEC
+  USE globalData_mizuRoute, ONLY: reachID
 
   implicit none
 
@@ -168,7 +168,7 @@ CONTAINS
    USE public_var,          ONLY: case_name        ! simulation name ==> output filename head
    USE public_var,          ONLY: calendar
    USE public_var,          ONLY: secprday
-   USE globalData,          ONLY: simDatetime      ! current model datetime
+   USE globalData_mizuRoute,          ONLY: simDatetime      ! current model datetime
 
    implicit none
 
@@ -210,8 +210,8 @@ CONTAINS
  SUBROUTINE define_state_nc(fname,           &  ! input: filename
                             ierr, message)      ! output: error control
 
- USE globalData, ONLY: meta_stateDims
- USE globalData, ONLY: simDatetime                 ! current model datetime
+ USE globalData_mizuRoute, ONLY: meta_stateDims
+ USE globalData_mizuRoute, ONLY: simDatetime                 ! current model datetime
  USE public_var, ONLY: calendar
  USE var_lookup, ONLY: ixStateDims, nStateDims
 
@@ -324,12 +324,12 @@ CONTAINS
 
   SUBROUTINE set_dim_len(ixDim, ierr, message1)
 
-   USE globalData,   ONLY: meta_stateDims  ! states dimension meta
-   USE globalData,   ONLY: nRch
-   USE globalData,   ONLY: nMolecule
-   USE globalData,   ONLY: maxtdh          ! maximum unit-hydrogrph future time
+   USE globalData_mizuRoute,   ONLY: meta_stateDims  ! states dimension meta
+   USE globalData_mizuRoute,   ONLY: nRch
+   USE globalData_mizuRoute,   ONLY: nMolecule
+   USE globalData_mizuRoute,   ONLY: maxtdh          ! maximum unit-hydrogrph future time
    USE public_var,   ONLY: MAXQPAR
-   USE globalData,   ONLY: FRAC_FUTURE     ! To get size of q future for basin IRF
+   USE globalData_mizuRoute,   ONLY: FRAC_FUTURE     ! To get size of q future for basin IRF
 
    implicit none
 
@@ -361,7 +361,7 @@ CONTAINS
 
   SUBROUTINE define_basinQ_state(ierr, message1)
 
-   USE globalData, ONLY: meta_basinQ
+   USE globalData_mizuRoute, ONLY: meta_basinQ
    USE var_lookup, ONLY: ixBasinQ, nVarsBasinQ
 
    implicit none
@@ -399,7 +399,7 @@ CONTAINS
 
   SUBROUTINE define_IRFbas_state(ierr, message1)
 
-   USE globalData, ONLY: meta_irf_bas
+   USE globalData_mizuRoute, ONLY: meta_irf_bas
    USE var_lookup, ONLY: ixIRFbas, nVarsIRFbas
 
    implicit none
@@ -446,7 +446,7 @@ CONTAINS
 
   SUBROUTINE define_KWT_state(ierr, message1)
 
-   USE globalData, ONLY: meta_kwt
+   USE globalData_mizuRoute, ONLY: meta_kwt
    USE var_lookup, ONLY: ixKWT, nVarsKWT
 
    implicit none
@@ -498,7 +498,7 @@ CONTAINS
 
   SUBROUTINE define_IRF_state(ierr, message1)
 
-   USE globalData, ONLY: meta_irf
+   USE globalData_mizuRoute, ONLY: meta_irf
    USE var_lookup, ONLY: ixIRF, nVarsIRF
 
    implicit none
@@ -550,7 +550,7 @@ CONTAINS
 
   SUBROUTINE define_KW_state(ierr, message1)
 
-   USE globalData, ONLY: meta_kw
+   USE globalData_mizuRoute, ONLY: meta_kw
    USE var_lookup, ONLY: ixKW, nVarsKW
 
    implicit none
@@ -601,7 +601,7 @@ CONTAINS
 
   SUBROUTINE define_MC_state(ierr, message1)
 
-   USE globalData, ONLY: meta_mc
+   USE globalData_mizuRoute, ONLY: meta_mc
    USE var_lookup, ONLY: ixMC, nVarsMC
 
    implicit none
@@ -652,7 +652,7 @@ CONTAINS
 
   SUBROUTINE define_DW_state(ierr, message1)
 
-   USE globalData, ONLY: meta_dw
+   USE globalData_mizuRoute, ONLY: meta_dw
    USE var_lookup, ONLY: ixDW, nVarsDW
 
    implicit none
@@ -712,9 +712,9 @@ CONTAINS
                            ierr, message)            ! Output: error control
 
  USE dataTypes,    ONLY: states
- USE globalData,   ONLY: RCHFLX
- USE globalData,   ONLY: RCHSTA
- USE globalData,   ONLY: meta_stateDims  ! dimension meta for state variables
+ USE globalData_mizuRoute,   ONLY: RCHFLX
+ USE globalData_mizuRoute,   ONLY: RCHSTA
+ USE globalData_mizuRoute,   ONLY: meta_stateDims  ! dimension meta for state variables
  USE var_lookup,   ONLY: ixStateDims, nStateDims
 
  implicit none
@@ -788,7 +788,7 @@ CONTAINS
   ! reach inflow writing procedure
   SUBROUTINE write_basinQ_state(ierr, message1)
 
-  USE globalData,   ONLY: meta_basinQ
+  USE globalData_mizuRoute,   ONLY: meta_basinQ
   USE var_lookup,   ONLY: ixBasinQ, nVarsBasinQ
 
   implicit none
@@ -844,7 +844,7 @@ CONTAINS
   ! Basin IRF writing procedures
   SUBROUTINE write_IRFbas_state(ierr, message1)
 
-  USE globalData,   ONLY: meta_irf_bas
+  USE globalData_mizuRoute,   ONLY: meta_irf_bas
   USE var_lookup,   ONLY: ixIRFbas, nVarsIRFbas
 
   implicit none
@@ -901,7 +901,7 @@ CONTAINS
   ! KWT writing procedures
   SUBROUTINE write_KWT_state(ierr, message1)
 
-  USE globalData,   ONLY: meta_kwt
+  USE globalData_mizuRoute,   ONLY: meta_kwt
   USE var_lookup,   ONLY: ixKWT, nVarsKWT
 
   implicit none
@@ -991,10 +991,10 @@ CONTAINS
   ! IRF writing procedures
   SUBROUTINE write_IRF_state(ierr, message1)
 
-  USE globalData,   ONLY: meta_irf
-  USE globalData,   ONLY: idxIRF
+  USE globalData_mizuRoute,   ONLY: meta_irf
+  USE globalData_mizuRoute,   ONLY: idxIRF
   USE var_lookup,   ONLY: ixIRF, nVarsIRF
-  USE globalData,   ONLY: NETOPO          ! To get UH (this should not be in this data strucuture)
+  USE globalData_mizuRoute,   ONLY: NETOPO          ! To get UH (this should not be in this data strucuture)
 
   implicit none
 
@@ -1069,8 +1069,8 @@ CONTAINS
   ! KW writing procedures
   SUBROUTINE write_KW_state(ierr, message1)
 
-    USE globalData,   ONLY: meta_kw
-    USE globalData,   ONLY: idxKW
+    USE globalData_mizuRoute,   ONLY: meta_kw
+    USE globalData_mizuRoute,   ONLY: idxKW
     USE var_lookup,   ONLY: ixKW, nVarsKW
 
     implicit none
@@ -1137,8 +1137,8 @@ CONTAINS
   ! MC writing procedures
   SUBROUTINE write_MC_state(ierr, message1)
 
-    USE globalData,   ONLY: meta_mc
-    USE globalData,   ONLY: idxMC
+    USE globalData_mizuRoute,   ONLY: meta_mc
+    USE globalData_mizuRoute,   ONLY: idxMC
     USE var_lookup,   ONLY: ixMC, nVarsMC
 
     implicit none
@@ -1206,8 +1206,8 @@ CONTAINS
   ! DW writing procedures
   SUBROUTINE write_DW_state(ierr, message1)
 
-    USE globalData,   ONLY: meta_dw
-    USE globalData,   ONLY: idxDW
+    USE globalData_mizuRoute,   ONLY: meta_dw
+    USE globalData_mizuRoute,   ONLY: idxDW
     USE var_lookup,   ONLY: ixDW, nVarsDW
 
     implicit none

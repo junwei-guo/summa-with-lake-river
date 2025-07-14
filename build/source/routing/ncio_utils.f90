@@ -130,6 +130,9 @@ CONTAINS
 
  ! initialize error control
  ierr=0; message='get_var_dims/'
+  
+ print *, "get_var_dims: fname="//trim(fname)//'; vname='//trim(vname)
+
 
  ! open NetCDF file
  ierr = nf90_open(trim(fname),nf90_nowrite,ncid)

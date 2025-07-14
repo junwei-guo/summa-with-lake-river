@@ -25,11 +25,11 @@ CONTAINS
                           T0, T1,          &   ! output: start and end time [sec]
                           ierr, message)       ! Output: error control
 
- USE globalData, ONLY: RCHFLX                    ! To get q future for basin IRF and IRF (these should not be in this data strucuture)
- USE globalData, ONLY: RCHSTA                    ! restart state data structure
+ USE globalData_mizuRoute, ONLY: RCHFLX                    ! To get q future for basin IRF and IRF (these should not be in this data strucuture)
+ USE globalData_mizuRoute, ONLY: RCHSTA                    ! restart state data structure
  USE dataTypes,  ONLY: states
- USE globalData, ONLY: meta_stateDims            ! dimension for state variables
- USE globalData, ONLY: onRoute                   ! logical to indicate which routing method(s) is on
+ USE globalData_mizuRoute, ONLY: meta_stateDims            ! dimension for state variables
+ USE globalData_mizuRoute, ONLY: onRoute                   ! logical to indicate which routing method(s) is on
  USE public_var, ONLY: impulseResponseFunc
  USE public_var, ONLY: kinematicWaveTracking
  USE public_var, ONLY: kinematicWave
@@ -121,7 +121,7 @@ CONTAINS
  CONTAINS
 
   SUBROUTINE read_basinQ_state(ierr, message1)
-    USE globalData, ONLY: meta_basinQ               ! reach inflow from basin at previous time step
+    USE globalData_mizuRoute, ONLY: meta_basinQ               ! reach inflow from basin at previous time step
     USE var_lookup, ONLY: ixBasinQ, nVarsBasinQ
     implicit none
     ! output
@@ -171,7 +171,7 @@ CONTAINS
 
 
   SUBROUTINE read_IRFbas_state(ierr, message1)
-    USE globalData, ONLY: meta_irf_bas              ! basin IRF routing
+    USE globalData_mizuRoute, ONLY: meta_irf_bas              ! basin IRF routing
     USE var_lookup, ONLY: ixIRFbas, nVarsIRFbas
     implicit none
     ! output
@@ -225,8 +225,8 @@ CONTAINS
 
 
   SUBROUTINE read_IRF_state(ierr, message1)
-    USE globalData,  ONLY: meta_irf               ! IRF routing
-    USE globalData,  ONLY: idxIRF
+    USE globalData_mizuRoute,  ONLY: meta_irf               ! IRF routing
+    USE globalData_mizuRoute,  ONLY: idxIRF
     USE var_lookup,  ONLY: ixIRF, nVarsIRF
     implicit none
     integer(i4b), intent(out)     :: ierr           ! error code
@@ -295,7 +295,7 @@ CONTAINS
 
 
   SUBROUTINE read_KWT_state(ierr, message1)
-    USE globalData, ONLY: meta_kwt
+    USE globalData_mizuRoute, ONLY: meta_kwt
     USE var_lookup, ONLY: ixKWT, nVarsKWT
     implicit none
     integer(i4b), intent(out)     :: ierr           ! error code
@@ -370,9 +370,9 @@ CONTAINS
 
 
   SUBROUTINE read_KW_state(ierr, message1)
-    USE globalData, ONLY: meta_kw
-    USE globalData, ONLY: nMolecule
-    USE globalData, ONLY: idxKW
+    USE globalData_mizuRoute, ONLY: meta_kw
+    USE globalData_mizuRoute, ONLY: nMolecule
+    USE globalData_mizuRoute, ONLY: idxKW
     USE var_lookup, ONLY: ixKW, nVarsKW
     implicit none
     integer(i4b), intent(out)     :: ierr           ! error code
@@ -435,9 +435,9 @@ CONTAINS
 
 
   SUBROUTINE read_MC_state(ierr, message1)
-    USE globalData, ONLY: meta_mc
-    USE globalData, ONLY: nMolecule
-    USE globalData, ONLY: idxMC
+    USE globalData_mizuRoute, ONLY: meta_mc
+    USE globalData_mizuRoute, ONLY: nMolecule
+    USE globalData_mizuRoute, ONLY: idxMC
     USE var_lookup, ONLY: ixMC, nVarsMC
     implicit none
     integer(i4b), intent(out)     :: ierr           ! error code
@@ -500,9 +500,9 @@ CONTAINS
 
 
   SUBROUTINE read_DW_state(ierr, message1)
-    USE globalData, ONLY: meta_dw
-    USE globalData, ONLY: nMolecule
-    USE globalData, ONLY: idxDW
+    USE globalData_mizuRoute, ONLY: meta_dw
+    USE globalData_mizuRoute, ONLY: nMolecule
+    USE globalData_mizuRoute, ONLY: idxDW
     USE var_lookup, ONLY: ixDW, nVarsDW
     implicit none
     integer(i4b), intent(out)     :: ierr           ! error code

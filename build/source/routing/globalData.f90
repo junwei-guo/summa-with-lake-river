@@ -1,4 +1,4 @@
-MODULE globalData
+MODULE globalData_mizuRoute
 
   ! This module includes global data structures
 
@@ -170,4 +170,4 @@ MODULE globalData
   integer(i4b)                   , public :: maxtdh                     ! maximum unit-hydrograph future time steps
   type(cMolecule)                , public :: nMolecule                  ! number of computational molecule (used for KW, MC, DW)
 
-END MODULE globalData
+END MODULE globalData_mizuRoute

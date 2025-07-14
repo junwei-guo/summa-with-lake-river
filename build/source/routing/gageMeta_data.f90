@@ -3,7 +3,7 @@ MODULE gageMeta_data
   USE nrtype
   USE public_var,        ONLY: integerMissing
   USE csv_data,          ONLY: csv
-  USE nr_utility_module, ONLY: match_index
+  USE nr_utility_module_mizuRoute, ONLY: match_index
 
   implicit none
 

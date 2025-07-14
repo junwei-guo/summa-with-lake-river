@@ -10,10 +10,10 @@ MODULE datetime_data
 USE nrtype
 USE public_var,        ONLY: realMissing, integerMissing
 USE public_var,        ONLY: secprday, hr_per_day
-USE time_utils_module, ONLY: extractTime                 !
-USE time_utils_module, ONLY: compJulday,&                ! compute julian day
+USE time_utils_module_mizuRoute, ONLY: extractTime                 !
+USE time_utils_module_mizuRoute, ONLY: compJulday,&                ! compute julian day
                              compJulday_noleap           ! compute julian day for noleap calendar
-USE time_utils_module, ONLY: compCalday,&                ! compute calendar date and time
+USE time_utils_module_mizuRoute, ONLY: compCalday,&                ! compute calendar date and time
                              compCalday_noleap           ! compute calendar date and time for noleap calendar
 
 implicit none

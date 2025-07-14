@@ -4,14 +4,14 @@ USE nrtype
 USE public_var, ONLY: iulog            ! i/o logical unit number
 USE public_var, ONLY: qmodOption       ! option for streamflow modification (DA)
 USE public_var, ONLY: takeWater        ! switch for water abstraction/injection
-USE globalData, ONLY: gage_obs_data
-USE globalData, ONLY: rch_qtake_data
+USE globalData_mizuRoute, ONLY: gage_obs_data
+USE globalData_mizuRoute, ONLY: rch_qtake_data
 
 implicit none
 
 private
 public :: finalize
-public :: handle_err
+public :: handle_error
 
 CONTAINS
 
@@ -36,7 +36,7 @@ CONTAINS
  ! *********************************************************************
  ! public subroutine: error handling
  ! *********************************************************************
- SUBROUTINE handle_err(err,message)
+ SUBROUTINE handle_error(err,message)
  implicit none
  integer(i4b),intent(in)::err             ! error code
  character(*),intent(in)::message         ! error message
@@ -45,7 +45,7 @@ CONTAINS
    call flush(6)
    stop
  endif
- END SUBROUTINE handle_err
+ END SUBROUTINE handle_error
 
 
 END MODULE model_finalize

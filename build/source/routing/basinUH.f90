@@ -77,7 +77,7 @@ CONTAINS
                     RCHFLX_out,   &    ! inout: reach flux data structure
                     ierr, message)     ! output: error control
 
- USE globalData, ONLY: FRAC_FUTURE
+ USE globalData_mizuRoute, ONLY: FRAC_FUTURE
 
  implicit none
  ! Argument variables

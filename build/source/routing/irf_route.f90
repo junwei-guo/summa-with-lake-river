@@ -14,11 +14,11 @@ USE public_var, ONLY: realMissing     ! missing value for real number
 USE public_var, ONLY: integerMissing  ! missing value for integer number
 USE public_var, ONLY: dt=>dt_sim      ! routing time step duration [sec]
 USE public_var, ONLY: qmodOption      ! qmod option (use 1==direct insertion)
-USE globalData, ONLY: nThreads        ! number of threads used for openMP
-USE globalData, ONLY: idxIRF          ! index of IRF method
+USE globalData_mizuRoute, ONLY: nThreads        ! number of threads used for openMP
+USE globalData_mizuRoute, ONLY: idxIRF          ! index of IRF method
 ! subroutines: general
 USE data_assimilation, ONLY: direct_insertion ! qmod option (use 1==direct insertion)
-USE model_finalize,    ONLY: handle_err
+USE model_finalize,    ONLY: handle_error
 
 implicit none
 
@@ -121,7 +121,7 @@ CONTAINS
        jSeg = river_basin(ix)%branch(iTrib)%segIndex(iSeg)
        if (.not. doRoute(jSeg)) cycle
        call irf_rch(iEns, jSeg, ixDesire, NETOPO_IN, RPARAM_in, RCHSTA_out, RCHFLX_out, ierr, cmessage)
-       if(ierr/=0) call handle_err(ierr, trim(message)//trim(cmessage))
+       if(ierr/=0) call handle_error(ierr, trim(message)//trim(cmessage))
      end do seg
 !    call system_clock(openMPend(iTrib))
 !    timeTrib(iTrib) = real(openMPend(iTrib)-timeTribStart(iTrib), kind(dp))

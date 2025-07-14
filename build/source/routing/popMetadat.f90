@@ -18,24 +18,24 @@ USE public_var, only : varType_double    ! named variable for a double precision
 USE public_var, only : varType_character ! named variable for a double precision
 
 ! metadata on data structures
-USE globalData, only : meta_struct    ! structure information
-USE globalData, only : meta_dims      ! dimensions
-USE globalData, only : meta_stateDims ! dimensions for routing states output
-USE globalData, only : meta_qDims     ! dimensions for river discharge output
-USE globalData, only : meta_HRU       ! HRU properties
-USE globalData, only : meta_HRU2SEG   ! HRU-to-segment mapping
-USE globalData, only : meta_SEG       ! stream segment properties
-USE globalData, only : meta_NTOPO     ! network topology
-USE globalData, only : meta_PFAF      ! pfafstetter code
+USE globalData_mizuRoute, only : meta_struct    ! structure information
+USE globalData_mizuRoute, only : meta_dims      ! dimensions
+USE globalData_mizuRoute, only : meta_stateDims ! dimensions for routing states output
+USE globalData_mizuRoute, only : meta_qDims     ! dimensions for river discharge output
+USE globalData_mizuRoute, only : meta_HRU       ! HRU properties
+USE globalData_mizuRoute, only : meta_HRU2SEG   ! HRU-to-segment mapping
+USE globalData_mizuRoute, only : meta_SEG       ! stream segment properties
+USE globalData_mizuRoute, only : meta_NTOPO     ! network topology
+USE globalData_mizuRoute, only : meta_PFAF      ! pfafstetter code
 
-USE globalData, only : meta_rflx      ! reach flux variables
-USE globalData, only : meta_irf_bas   ! within-basin irf routing future flow
-USE globalData, only : meta_basinQ    ! reach inflow from basin
-USE globalData, only : meta_irf       ! irf routing restart states and fluxes in a segment
-USE globalData, only : meta_kwt       ! lagrangian kinematic wave routing restart states and fluxes in a segment
-USE globalData, only : meta_kw        ! kinematic wave routing restart fluxes and states in a segment
-USE globalData, only : meta_dw        ! diffusive wave routing restart fluxes and states in a segment
-USE globalData, only : meta_mc        ! muskingum-cunge routing restart fluxes and states in a segment
+USE globalData_mizuRoute, only : meta_rflx      ! reach flux variables
+USE globalData_mizuRoute, only : meta_irf_bas   ! within-basin irf routing future flow
+USE globalData_mizuRoute, only : meta_basinQ    ! reach inflow from basin
+USE globalData_mizuRoute, only : meta_irf       ! irf routing restart states and fluxes in a segment
+USE globalData_mizuRoute, only : meta_kwt       ! lagrangian kinematic wave routing restart states and fluxes in a segment
+USE globalData_mizuRoute, only : meta_kw        ! kinematic wave routing restart fluxes and states in a segment
+USE globalData_mizuRoute, only : meta_dw        ! diffusive wave routing restart fluxes and states in a segment
+USE globalData_mizuRoute, only : meta_mc        ! muskingum-cunge routing restart fluxes and states in a segment
 
 ! indices of named variables
 USE var_lookup, only : ixStruct   , nStructures   ! index of variables for data structure

@@ -17,7 +17,7 @@ MODULE remapping
   ! global data
   USE public_var, ONLY: runoffMin, negRunoffTol
   USE public_var, ONLY: integerMissing
-  USE globalData, ONLY: time_conv,length_conv   ! conversion factors
+  USE globalData_mizuRoute, ONLY: time_conv,length_conv   ! conversion factors
 
   implicit none
 
@@ -334,7 +334,7 @@ MODULE remapping
                          ierr, message,     & ! output: error control
                          ixSubRch)            ! optional input: subset of reach indices to be processed
 
-  USE nr_utility_module, ONLY : arth
+  USE nr_utility_module_mizuRoute, ONLY : arth
 
   implicit none
   ! Argument variables

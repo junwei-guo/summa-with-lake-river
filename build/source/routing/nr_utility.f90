@@ -1,4 +1,4 @@
-MODULE nr_utility_module
+MODULE nr_utility_module_mizuRoute
 
 ! contains functions that should really be part of the fortran standard, but are not
 
@@ -527,4 +527,4 @@ CONTAINS
     end do
   END FUNCTION
 
-END MODULE nr_utility_module
+END MODULE nr_utility_module_mizuRoute

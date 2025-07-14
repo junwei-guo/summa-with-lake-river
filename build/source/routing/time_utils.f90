@@ -18,7 +18,7 @@
 ! You should have received a copy of the GNU General Public License
 ! along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-MODULE time_utils_module
+MODULE time_utils_module_mizuRoute
 
 USE nrtype
 USE public_var, ONLY: secprday,secprhour,secprmin, &   ! seconds in an (day, hour, minute)
@@ -64,7 +64,7 @@ CONTAINS
  ! public subroutine: get number of days within a month
  ! ******************************************************************************************
  SUBROUTINE ndays_month(yr, mo, calendar, ndays, ierr, message)
-  USE ascii_util_module, ONLY : lower         ! convert string to lower case
+  USE ascii_util_module_mizuRoute, ONLY : lower         ! convert string to lower case
  implicit none
  ! Argument variables
  integer(i4b),intent(in)           :: yr
@@ -488,4 +488,4 @@ CONTAINS
  end if
  END FUNCTION
 
-END MODULE time_utils_module
+END MODULE time_utils_module_mizuRoute

@@ -1,4 +1,4 @@
-MODULE ascii_util_module
+MODULE ascii_util_module_mizuRoute
 
 USE nrtype
 
@@ -254,4 +254,4 @@ CONTAINS
 
   END FUNCTION lower
 
-END MODULE ascii_util_module
+END MODULE ascii_util_module_mizuRoute

@@ -38,17 +38,17 @@ CONTAINS
    USE public_var, ONLY: kinematicWave
    USE public_var, ONLY: muskingumCunge
    USE public_var, ONLY: diffusiveWave
-   USE globalData, ONLY: onRoute                 ! logical to indicate which routing method(s) is on
-   USE globalData, ONLY: TSEC                    ! beginning/ending of simulation time step [sec]
-   USE globalData, ONLY: ixPrint                 ! desired reach index to be on-screen print
+   USE globalData_mizuRoute, ONLY: onRoute                 ! logical to indicate which routing method(s) is on
+   USE globalData_mizuRoute, ONLY: TSEC                    ! beginning/ending of simulation time step [sec]
+   USE globalData_mizuRoute, ONLY: ixPrint                 ! desired reach index to be on-screen print
 
-   USE globalData, ONLY: NETOPO           ! entire river reach netowrk topology structure
-   USE globalData, ONLY: RPARAM           ! entire river reach parameter structure
-   USE globalData, ONLY: RCHFLX           ! entire reach flux structure
-   USE globalData, ONLY: RCHSTA           ! entire river reach restart structure
-   USE globalData, ONLY: runoff_data      ! runoff data structure
-   USE globalData, ONLY: river_basin      ! OMP basin decomposition
-   USE globalData, ONLY: nRch             ! number of reaches in the whoel river network
+   USE globalData_mizuRoute, ONLY: NETOPO           ! entire river reach netowrk topology structure
+   USE globalData_mizuRoute, ONLY: RPARAM           ! entire river reach parameter structure
+   USE globalData_mizuRoute, ONLY: RCHFLX           ! entire reach flux structure
+   USE globalData_mizuRoute, ONLY: RCHSTA           ! entire river reach restart structure
+   USE globalData_mizuRoute, ONLY: runoff_data      ! runoff data structure
+   USE globalData_mizuRoute, ONLY: river_basin      ! OMP basin decomposition
+   USE globalData_mizuRoute, ONLY: nRch             ! number of reaches in the whoel river network
 
    implicit none
    ! Argument variables

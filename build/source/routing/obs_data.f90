@@ -26,7 +26,7 @@ MODULE obs_data
   USE io_netcdf
   USE datetime_data, ONLY: datetime
   USE gageMeta_data, ONLY: gageMeta
-  USE nr_utility_module, ONLY: match_index
+  USE nr_utility_module_mizuRoute, ONLY: match_index
   USE public_var, ONLY: integerMissing
   USE public_var, ONLY: clen=>strlen_gageSite
 

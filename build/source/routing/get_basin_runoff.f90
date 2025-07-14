@@ -23,15 +23,15 @@ CONTAINS
   USE public_var,  ONLY: qmodOption              ! options for streamflow modification (DA)
   USE public_var,  ONLY: takeWater               ! switch for water abstraction/injection
   USE public_var,  ONLY: integerMissing          !
-  USE globalData,  ONLY: runoff_data             ! data structure to hru runoff data
-  USE globalData,  ONLY: remap_data              ! data structure to remap data
-  USE globalData,  ONLY: iTime                   !
-  USE globalData,  ONLY: simDatetime             ! current model time data (yyyy:mm:dd:hh:mm:sec)
-  USE globalData,  ONLY: begDatetime             ! forcing data start datetime data (yyyy:mm:dd:hh:mm:sec)
-  USE globalData,  ONLY: roBegDatetime           ! forcing data start datetime data (yyyy:mm:dd:hh:mm:sec)
-  USE globalData,  ONLY: gage_obs_data           !
-  USE globalData,  ONLY: rch_qtake_data          !
-  USE globalData,  ONLY: RCHFLX                  !
+  USE globalData_mizuRoute,  ONLY: runoff_data             ! data structure to hru runoff data
+  USE globalData_mizuRoute,  ONLY: remap_data              ! data structure to remap data
+  USE globalData_mizuRoute,  ONLY: iTime                   !
+  USE globalData_mizuRoute,  ONLY: simDatetime             ! current model time data (yyyy:mm:dd:hh:mm:sec)
+  USE globalData_mizuRoute,  ONLY: begDatetime             ! forcing data start datetime data (yyyy:mm:dd:hh:mm:sec)
+  USE globalData_mizuRoute,  ONLY: roBegDatetime           ! forcing data start datetime data (yyyy:mm:dd:hh:mm:sec)
+  USE globalData_mizuRoute,  ONLY: gage_obs_data           !
+  USE globalData_mizuRoute,  ONLY: rch_qtake_data          !
+  USE globalData_mizuRoute,  ONLY: RCHFLX                  !
   USE read_runoff, ONLY: read_runoff_data        ! read runoff value into runoff_data data strucuture
   USE remapping,   ONLY: remap_runoff            ! mapping HM runoff to river network HRU runoff (HM_HRU /= RN_HRU)
   USE remapping,   ONLY: sort_runoff             ! mapping HM runoff to river network HRU runoff (HM_HRU == RN_HRU)
@@ -148,7 +148,7 @@ CONTAINS
                              ixTime,            & ! input: simulation time index
                              ierr, message)
 
-   USE nr_utility_module, ONLY: arth
+   USE nr_utility_module_mizuRoute, ONLY: arth
    USE datetime_data,     ONLY: datetime       ! time data type
    USE dataTypes,         ONLY: map_time       ! data type for time-step mapping between two time series
    USE public_var,        ONLY: verySmall      ! smallest real values

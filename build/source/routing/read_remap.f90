@@ -100,7 +100,7 @@ CONTAINS
                              ierr, message)     ! output: error control
 
  USE dataTypes,          ONLY : remap           ! remapping data type
- USE nr_utility_module,  ONLY : arth
+ USE nr_utility_module_mizuRoute,  ONLY : arth
 
  implicit none
  ! Argument variables

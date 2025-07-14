@@ -14,9 +14,9 @@ USE public_var, ONLY: runoffMin        ! minimum runoff
 USE public_var, ONLY: verySmall        ! a very small value
 USE public_var, ONLY: realMissing      ! missing value for real number
 USE public_var, ONLY: integerMissing   ! missing value for integer number
-USE globalData, ONLY: idxKWT           ! index of KWT method
+USE globalData_mizuRoute, ONLY: idxKWT           ! index of KWT method
 ! utilities
-USE nr_utility_module, ONLY: arth      ! Num. Recipies utilities
+USE nr_utility_module_mizuRoute, ONLY: arth      ! Num. Recipies utilities
 
 implicit none
 
@@ -40,7 +40,7 @@ CONTAINS
                       ixSubRch)               ! optional input: subset of reach indices to be processed
 
    USE dataTypes,      ONLY : subbasin_omp        ! mainstem+tributary data strucuture
-   USE model_finalize, ONLY : handle_err
+   USE model_finalize, ONLY : handle_error
 
    implicit none
    ! Argument variables
@@ -135,7 +135,7 @@ CONTAINS
                          RCHSTA_out,          & ! inout: reach state data structure
                          RCHFLX_out,          & ! inout: reach flux data structure
                          ierr,cmessage)         ! output: error control
-         if(ierr/=0) call handle_err(ierr, trim(message)//trim(cmessage))
+         if(ierr/=0) call handle_error(ierr, trim(message)//trim(cmessage))
        end do seg
 !     call system_clock(openMPend(iTrib))
 !     timeTrib(iTrib) = real(openMPend(iTrib)-timeTribStart(iTrib), kind(dp))
@@ -601,8 +601,8 @@ CONTAINS
  !  T_EXIT(:): Vector of times flow particles are expected to exit reach JRCH
  !
  ! ----------------------------------------------------------------------------------------
- USE globalData, ONLY: LKTOPO           ! Lake topology
- USE globalData, ONLY: LAKFLX           ! Lake fluxes
+ USE globalData_mizuRoute, ONLY: LKTOPO           ! Lake topology
+ USE globalData_mizuRoute, ONLY: LAKFLX           ! Lake fluxes
 
  implicit none
  ! Argument variables

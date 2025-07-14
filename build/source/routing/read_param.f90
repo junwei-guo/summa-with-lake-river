@@ -1,4 +1,4 @@
-MODULE read_param_module
+MODULE read_param_module_routing
 
  USE nrtype, ONLY : i4b,   &
                     strLen
@@ -10,8 +10,8 @@ MODULE read_param_module
 
   SUBROUTINE read_param(fname, ierr, message)
 
-   USE ascii_util_module, ONLY : file_open          ! open file (performs a few checks as well)
-   USE globalData,        ONLY : fshape, tscale, &  ! basin IRF routing parameters
+   USE ascii_util_module_mizuRoute, ONLY : file_open          ! open file (performs a few checks as well)
+   USE globalData_mizuRoute,        ONLY : fshape, tscale, &  ! basin IRF routing parameters
                                  velo, diff,     &  ! IRF routing parameters
                                  mann_n, wscale     ! KWT routing parameters
    implicit none
@@ -40,4 +40,4 @@ MODULE read_param_module
 
   END SUBROUTINE read_param
 
-END MODULE read_param_module
+END MODULE read_param_module_routing

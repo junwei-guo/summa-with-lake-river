@@ -1,7 +1,7 @@
 MODULE gamma_func_module
 
 USE nrtype
-USE nr_utility_module, ONLY: arth
+USE nr_utility_module_mizuRoute, ONLY: arth
 
 implicit none
 

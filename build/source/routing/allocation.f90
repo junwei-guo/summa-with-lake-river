@@ -9,12 +9,12 @@ USE dataTypes, ONLY: var_info             ! metadata
 ! global data
 USE public_var
 ! metadata on data structures
-USE globalData, ONLY: meta_struct         ! structure information
-USE globalData, ONLY: meta_HRU            ! HRU properties
-USE globalData, ONLY: meta_HRU2SEG        ! HRU-to-segment mapping
-USE globalData, ONLY: meta_SEG            ! stream segment properties
-USE globalData, ONLY: meta_NTOPO          ! network topology
-USE globalData, ONLY: meta_PFAF           ! network topology
+USE globalData_mizuRoute, ONLY: meta_struct         ! structure information
+USE globalData_mizuRoute, ONLY: meta_HRU            ! HRU properties
+USE globalData_mizuRoute, ONLY: meta_HRU2SEG        ! HRU-to-segment mapping
+USE globalData_mizuRoute, ONLY: meta_SEG            ! stream segment properties
+USE globalData_mizuRoute, ONLY: meta_NTOPO          ! network topology
+USE globalData_mizuRoute, ONLY: meta_PFAF           ! network topology
 ! named variables
 USE var_lookup, ONLY: ixStruct, nStructures  ! index of data structures
 USE var_lookup, ONLY: ixDims,   nDimensions  ! index of dimensions
