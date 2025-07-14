@@ -43,8 +43,9 @@ USE globalData, only: mpiSyncTime                           ! MPI sync days
 USE globalData, only: data_step                             ! Time step size
 USE MPI
 USE summa_mpi
-USE SubGridLake
-USE route_interface
+USE summa_lake
+USE summa_routing, only: routing_coupling_control
+USE route_interface, only: stand_alone_run, route_sync_run_initialize,cfile_name
 ! USE SingleLake
 ! USE globalData,only:gru_struc                              ! gru->hru mapping structure
 ! USE globalData,only:index_map                              ! hru->gru mapping structure
@@ -67,12 +68,14 @@ real    :: start_time, end_time, end_time_each_rank
 integer :: driver_err
 type(LakeSystem)          :: lakeSys
 !type(SGLake)              :: newlake
+type(routing_coupling_control) :: routing_controller
+
 
 !Pause for MPI debugging
 !print *, "Sleeping for 30s .."
 !call sleep(30)
 
-  ! Initialize MPI
+! Initialize MPI
 call MPI_Init(mpi_err)
 call MPI_Comm_size(MPI_COMM_WORLD, num_rank, mpi_err)
 call MPI_Comm_rank(MPI_COMM_WORLD, idx_rank, mpi_err)
@@ -83,6 +86,8 @@ if (idx_rank == 1) then
   !Pause a rank for debugging purpose.
   !call sleep(999999)
 endif 
+
+
 ! *****************************************************************************
 ! * preliminaries
 ! *****************************************************************************
@@ -101,9 +106,22 @@ call summa_initialize(summa1_struc(n), err, message)
 call handle_err(err, message)
 
 
+! Initialize summa lake structure
 call lakeSys%InitAllLake()
 call lakeSys%LakeInitialConditions()
 !call lakeSys%SetDummyLake()
+
+
+
+! Initialize summa routing structure
+! TODO: set routing control parameters in summa input file
+
+!call routing_controller%set_stand_alone_routing()
+call routing_controller%set_sync_routing()
+! TODO: set routing control file in summa input file
+cfile_name=trim('mizuroute.control')
+!call stand_alone_run()
+call route_sync_run_initialize()
 
 ! initialize parameter data structures (e.g. vegetation and soil parameters)
 call summa_paramSetup(summa1_struc(n), err, message)
@@ -112,6 +130,7 @@ call handle_err(err, message)
 ! read restart data and reset the model state
 call summa_readRestart(summa1_struc(n), err, message)
 call handle_err(err, message)
+
 
 ! *****************************************************************************
 ! * model simulation
@@ -172,6 +191,9 @@ endif
 call MPI_Finalize(mpi_err)
 
 ! Stand alone mode routing scheme running
-call stand_alone_run()
+if (routing_controller%stand_alone_routing) then 
+  call stand_alone_run()
+end if
+
 stop 
 end program summa_driver

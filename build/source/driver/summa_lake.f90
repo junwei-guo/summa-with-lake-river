@@ -1,29 +1,10 @@
-
-
 !This module stores single lake information.
 !This module contains the interface to update the lake processes.
 module SingleLake
-      !use ode_jaco
-      !use matrix_module
-      !use numSolver
-      !use rksuite_90
-      !use rksuite_90_prec
-      !use minpack_module
-      !use minpack_capi
-      !use numerical_differentiation_module
-      !use WaterAirProperties
+
       use summa_mpi
       use flake_derivedtypes
       use data_parameters
-      ! INTEGER, PARAMETER       ::                                         &
-      !     ireals    = SELECTED_REAL_KIND (12,200),                       &
-      !                   ! number of desired significant digits for
-      !                   ! real variables
-      !                   ! corresponds to 8 byte real variables
-
-      !     iintegers = KIND  (1)
-      !                   ! kind-type parameter of the integer values
-      !                   ! corresponds to the default integers
 
       type :: SGLake
           character(len=50) :: name
@@ -285,7 +266,7 @@ module SingleLake
 end module SingleLake
   
 !This module stores all lake information.
-module SubGridLake
+module summa_lake
       !implicit none
       use NetCDF
       use SingleLake
@@ -695,5 +676,5 @@ module SubGridLake
 
   
   
-end module SubGridLake
+end module summa_lake
   

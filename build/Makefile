@@ -274,7 +274,8 @@ SUMMA_DRIVER= \
 		lake/flake.f90\
 		lake/SfcFlx.f90\
 		lake/src_flake_interface_1D.f90\
-		subGridLake.f90 \
+		summa_lake.f90 \
+		summa_routing.f90 \
 		summa_driver.f90
 DRIVER = $(patsubst %, $(DRIVER_DIR)/%, $(SUMMA_DRIVER))
 
