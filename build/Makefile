@@ -38,9 +38,9 @@ else ifeq  ($(mach), mac)
 
 
 
-	EBROOTOPENMPI=/Users/guo/homebrew/Cellar/open-mpi/5.0.3_1
-	EBROOTOPENBLAS=/Users/guo/homebrew/Cellar/openblas/0.3.28
-	EBROOTNETCDFMINFORTRAN=/Users/guo/homebrew/Cellar/netcdf-fortran/4.6.1
+	EBROOTOPENMPI=/Users/guo/homebrew/Cellar/open-mpi/5.0.7
+	EBROOTOPENBLAS=/Users/guo/homebrew/Cellar/openblas/0.3.29
+	EBROOTNETCDFMINFORTRAN=/Users/guo/homebrew/Cellar/netcdf-fortran/4.6.2
 
 	FC_EXE = /Users/guo/homebrew/bin/mpif90
 	CC = /Users/guo/homebrew/Cellar/gcc/14.1.0_2/bin/gcc-14
@@ -84,15 +84,15 @@ FLAGS_SUMMA = -O3 -ffree-line-length-none -fmax-errors=0
 
 endif
 
-#MUST include mizuRoute path
-FLAGS_SUMMA+=-I${ROUTING} 
+# #MUST include mizuRoute path
+# FLAGS_SUMMA+=-I${ROUTING} 
 
-#Option 1: include mizuRoute .o and .mod files
-#INCLUDES+=-I${ROUTING} 
+# #Option 1: include mizuRoute .o and .mod files
+# #INCLUDES+=-I${ROUTING} 
 
-#Option 2: link static libraries
-LIBRARIES+=$(ROUTING)/libmizuroute.a
-#========================================================================
+# #Option 2: link static libraries
+# LIBRARIES+=$(ROUTING)/libmizuroute.a
+# #========================================================================
 # PART 1: Define directory paths
 #========================================================================
 
@@ -274,6 +274,50 @@ SUMMA_DRIVER= \
 		lake/flake.f90\
 		lake/SfcFlx.f90\
 		lake/src_flake_interface_1D.f90\
+		route/nrtype_mizuroute.f90 \
+		route/nr_utility_mizuroute.f90 \
+		route/ascii_util_mizuroute.f90 \
+		route/ncio_utils.f90 \
+		route/gamma_func.f90 \
+		route/public_var.f90 \
+		route/dataTypes.f90 \
+		route/var_lookup_mizuroute.f90 \
+		route/time_utils_mizuroute.f90 \
+		route/datetime_data.f90 \
+		route/csv_data.f90 \
+		route/gageMeta_data.f90 \
+		route/obs_data.f90 \
+		route/globalData_mizuroute.f90 \
+		route/popMetadat_mizuroute.f90 \
+		route/allocation.f90 \
+		route/network_topo.f90 \
+		route/process_param.f90 \
+		route/process_ntopo.f90 \
+		route/pfafstetter.f90 \
+		route/domain_decomposition.f90 \
+		route/remap.f90 \
+		route/read_control.f90 \
+		route/read_param_mizuroute.f90 \
+		route/read_streamSeg.f90 \
+		route/write_streamSeg.f90 \
+		route/read_runoff.f90 \
+		route/get_basin_runoff.f90 \
+		route/read_remap.f90 \
+		route/read_restart.f90 \
+		route/write_restart.f90 \
+		route/write_simoutput.f90 \
+		route/model_finalize.f90 \
+		route/data_assimilation.f90 \
+		route/accum_runoff.f90 \
+		route/basinUH.f90 \
+		route/irf_route.f90 \
+		route/kwt_route.f90 \
+		route/dfw_route.f90 \
+		route/kw_route.f90 \
+		route/mc_route.f90 \
+		route/main_route.f90 \
+		route/model_setup.f90 \
+		route/route_interface.f90 \
 		summa_lake.f90 \
 		summa_routing.f90 \
 		summa_driver.f90
