@@ -42,10 +42,9 @@ USE globalData, only: numtim                                ! number of model ti
 USE globalData, only: mpiSyncTime                           ! MPI sync days 
 USE globalData, only: data_step                             ! Time step size
 USE MPI
-USE summa_mpi
-USE summa_lake
-USE summa_routing, only: routing_coupling_control
-USE route_interface, only: stand_alone_run, route_sync_run_initialize,cfile_name
+USE summa_mpi, only: mpi_err,num_rank,idx_rank, mpi_print, num2str, dou2str ! MPI error handling and printing
+USE summa_lake, only: LakeSystem
+USE route_interface, only: route_stand_alone_run, route_sync_run_initialize,route_sync_run_stepping,cfile_name
 ! USE SingleLake
 ! USE globalData,only:gru_struc                              ! gru->hru mapping structure
 ! USE globalData,only:index_map                              ! hru->gru mapping structure
@@ -68,8 +67,6 @@ real    :: start_time, end_time, end_time_each_rank
 integer :: driver_err
 type(LakeSystem)          :: lakeSys
 !type(SGLake)              :: newlake
-type(routing_coupling_control) :: routing_controller
-
 
 !Pause for MPI debugging
 !print *, "Sleeping for 30s .."
@@ -114,13 +111,8 @@ call lakeSys%LakeInitialConditions()
 
 
 ! Initialize summa routing structure
-! TODO: set routing control parameters in summa input file
-
-!call routing_controller%set_stand_alone_routing()
-call routing_controller%set_sync_routing()
 ! TODO: set routing control file in summa input file
 cfile_name=trim('mizuroute.control')
-!call stand_alone_run()
 call route_sync_run_initialize()
 
 ! initialize parameter data structures (e.g. vegetation and soil parameters)
@@ -167,6 +159,9 @@ do modelTimeStep=1,numtim
  call summa_writeOutputFiles(modelTimeStep, summa1_struc(n), err, message)
  call handle_err(err, message)
 
+
+ call route_sync_run_stepping(summa1_struc(n),modelTimeStep,numtim,data_step)
+
 end do  ! looping through time
 
 driver_err = 0 
@@ -190,10 +185,6 @@ if(driver_err==0)then
 endif
 call MPI_Finalize(mpi_err)
 
-! Stand alone mode routing scheme running
-if (routing_controller%stand_alone_routing) then 
-  call stand_alone_run()
-end if
 
 stop 
 end program summa_driver
