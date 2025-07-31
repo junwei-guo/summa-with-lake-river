@@ -35,3 +35,5 @@ Makefile-*
 *.backup
 # site directory from mkdocs
 site/
+summa
+summaDebugging

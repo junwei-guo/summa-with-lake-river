@@ -84,7 +84,7 @@ CONTAINS
   if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
   call system_clock(endTime)
   elapsedTime = real(endTime-startTime, kind(dp))/real(cr)
-  write(*,"(A,1PG15.7,A)") '      elapsed-time [basin2reach] = ', elapsedTime, ' s'
+  !write(*,"(A,1PG15.7,A)") '      elapsed-time [basin2reach] = ', elapsedTime, ' s'
 
   ! 2. subroutine: basin route
   if (doesBasinRoute == 1) then
@@ -97,7 +97,7 @@ CONTAINS
     if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
     call system_clock(endTime)
     elapsedTime = real(endTime-startTime, kind(dp))/real(cr)
-    write(*,"(A,1PG15.7,A)") '      elapsed-time [IRF_route_basin] = ', elapsedTime, ' s'
+    !write(*,"(A,1PG15.7,A)") '      elapsed-time [IRF_route_basin] = ', elapsedTime, ' s'
   else
     ! no basin routing required (handled outside mizuRoute))
     do iSeg = 1,nRch
@@ -118,7 +118,7 @@ CONTAINS
     if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
     call system_clock(endTime)
     elapsedTime = real(endTime-startTime, kind(dp))/real(cr)
-    write(*,"(A,1PG15.7,A)") '      elapsed-time [accum_runoff] = ', elapsedTime, ' s'
+    !write(*,"(A,1PG15.7,A)") '      elapsed-time [accum_runoff] = ', elapsedTime, ' s'
   endif
 
   if (onRoute(kinematicWaveTracking)) then
@@ -135,7 +135,7 @@ CONTAINS
     if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
     call system_clock(endTime)
     elapsedTime = real(endTime-startTime, kind(dp))/real(cr)
-    write(*,"(A,1PG15.7,A)") '      elapsed-time [kwt_route] = ', elapsedTime, ' s'
+    !write(*,"(A,1PG15.7,A)") '      elapsed-time [kwt_route] = ', elapsedTime, ' s'
   end if
 
   if (onRoute(impulseResponseFunc)) then
@@ -151,7 +151,7 @@ CONTAINS
     if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
     call system_clock(endTime)
     elapsedTime = real(endTime-startTime, kind(dp))/real(cr)
-    write(*,"(A,1PG15.7,A)") '      elapsed-time [irf_route] = ', elapsedTime, ' s'
+    !write(*,"(A,1PG15.7,A)") '      elapsed-time [irf_route] = ', elapsedTime, ' s'
   endif
 
   if (onRoute(kinematicWave)) then
@@ -168,7 +168,7 @@ CONTAINS
     if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
     call system_clock(endTime)
     elapsedTime = real(endTime-startTime, kind(dp))/real(cr)
-    write(*,"(A,1PG15.7,A)") '      elapsed-time [kw_route] = ', elapsedTime, ' s'
+    !write(*,"(A,1PG15.7,A)") '      elapsed-time [kw_route] = ', elapsedTime, ' s'
   endif
 
   if (onRoute(muskingumCunge)) then
@@ -185,7 +185,7 @@ CONTAINS
     if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
     call system_clock(endTime)
     elapsedTime = real(endTime-startTime, kind(dp))/real(cr)
-    write(*,"(A,1PG15.7,A)") '      elapsed-time [mc_route] = ', elapsedTime, ' s'
+    !write(*,"(A,1PG15.7,A)") '      elapsed-time [mc_route] = ', elapsedTime, ' s'
   endif
 
   if (onRoute(diffusiveWave)) then
@@ -202,7 +202,7 @@ CONTAINS
     if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
     call system_clock(endTime)
     elapsedTime = real(endTime-startTime, kind(dp))/real(cr)
-    write(*,"(A,1PG15.7,A)") '      elapsed-time [dfw_route] = ', elapsedTime, ' s'
+    !write(*,"(A,1PG15.7,A)") '      elapsed-time [dfw_route] = ', elapsedTime, ' s'
   endif
 
  END SUBROUTINE main_route
