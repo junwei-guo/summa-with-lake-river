@@ -270,6 +270,7 @@ module summa_lake
       !implicit none
       use NetCDF
       use SingleLake
+      use summa_mpi
       USE globalData,only:gru_struc                              ! gru->hru mapping structure
       USE globalData,only:index_map                              ! hru->gru mapping structure
       USE globalData,only:time_meta
@@ -294,6 +295,8 @@ module summa_lake
           procedure :: LandCoupling
           procedure :: WriteResult
       end type LakeSystem
+
+      logical :: exec_thermal_lake_comp       !Determin if Summa will compute the lake thermal profile
     contains
   
   
@@ -308,6 +311,16 @@ module summa_lake
 
           character(len=*), parameter :: filename = 'lakeinput.nc'
       
+          inquire(file=filename, exist=exec_thermal_lake_comp)
+
+          if (exec_thermal_lake_comp) then
+              if (idx_rank==0)   print *, "Thermal lake input file ["//trim(filename)//'] is found; lake thermal profile will be processed.'
+          else
+              if (idx_rank==0)   print *, "Thermal lake input file ["//trim(filename)//'] is NOT found; lake thermal profile will NOT be processed.'
+              return   ! Exit the lake subroutine
+          end if
+
+
           ! Open the NetCDF file in read-only mode
           retval = nf90_open(filename, NF90_NOWRITE, ncid)
 
@@ -410,6 +423,9 @@ module summa_lake
         class(LakeSystem):: this
         real  :: T0, H0
 
+        if (.not. exec_thermal_lake_comp) then
+          return   ! Exit the lake subroutine
+        end if
 
 
         ! Read initial conditions from file or set ICs to some values
@@ -469,6 +485,11 @@ module summa_lake
         real    :: lakeGridSize
         real,dimension(:),allocatable :: lakeDepthVec
         real,dimension(:),allocatable :: lakeTempVec
+
+        if (.not. exec_thermal_lake_comp) then
+          return   ! Exit the lake subroutine
+        end if
+
         do iLake = 1,this%nLake
             localGRUIdx = this%allSGLakes(iLake)%localGRUIdx
             localHRUIdx = this%allSGLakes(iLake)%localHRUIdx
@@ -519,6 +540,11 @@ module summa_lake
       subroutine UpdateAllLake(this, timeIncrement)
           class(LakeSystem):: this
           real(8), intent(in) :: timeIncrement
+
+          if (.not. exec_thermal_lake_comp) then
+            return   ! Exit the lake subroutine
+          end if
+
           do iLake = 1, this%nLake
               call this%allSGLakes(iLake)%UpdateInternalProcesses(timeIncrement)
           end do
@@ -530,7 +556,9 @@ module summa_lake
         class(LakeSystem):: this
         real(ireals), intent(in) :: timeIncrement
 
-    
+        if (.not. exec_thermal_lake_comp) then
+          return   ! Exit the lake subroutine
+        end if
 
 
       end subroutine LandCoupling
@@ -549,6 +577,12 @@ module summa_lake
 
         real, dimension(this%nLake) :: lakeID, Hylak_id, lakeGRUID,lakeHRUID,lakeArea,lakeDepth,airTemp,&
                             T_sfc,h_snow,h_ice,T_mnw,T_wML,C_T,h_ML,T_bot
+
+
+        if (.not. exec_thermal_lake_comp) then
+          return   ! Exit the lake subroutine
+        end if             
+
         nlake = this%nLake
         ! allocate(lakeID(nlake))
         ! allocate(Hylak_id(nlake))

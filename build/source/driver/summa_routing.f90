@@ -15,9 +15,9 @@ module summa_routing
 
     ! Pass Summa setting to mizuRoute, avoid mizuRoute reads duplicated input from control file or Summa NC files. 
     type :: setting_pass_through
-        real :: time_step         ! in sec.
-        real :: start_time
-        real :: end_time
+        real :: summa_time_step         ! in sec.
+        real :: summa_start_time
+        real :: summa_end_time
 
     contains 
 
