@@ -65,6 +65,7 @@ character(len=1024)                :: message=''                 ! error message
 
 real    :: start_time, end_time, end_time_each_rank
 integer :: driver_err
+logical :: exec_routing                                          !Determin if Summa will compute the river network routing
 type(LakeSystem)          :: lakeSys
 !type(SGLake)              :: newlake
 
@@ -113,7 +114,16 @@ call lakeSys%LakeInitialConditions()
 ! Initialize summa routing structure
 ! TODO: set routing control file in summa input file
 cfile_name=trim('mizuroute.control')
-call route_sync_run_initialize()
+inquire(file=cfile_name, exist=exec_routing)
+if (exec_routing) then
+    if (idx_rank==0)   print *, "Routing input file ["//trim(cfile_name)//'] is found; Summa-routing will be processed.'
+else
+    if (idx_rank==0)   print *, "Routing input file ["//trim(cfile_name)//'] is NOT found; Summa-routing will NOT be processed.'
+end if
+
+if (exec_routing) then
+  call route_sync_run_initialize()
+end if
 
 ! initialize parameter data structures (e.g. vegetation and soil parameters)
 call summa_paramSetup(summa1_struc(n), err, message)
@@ -159,8 +169,10 @@ do modelTimeStep=1,numtim
  call summa_writeOutputFiles(modelTimeStep, summa1_struc(n), err, message)
  call handle_err(err, message)
 
-
- call route_sync_run_stepping(summa1_struc(n),modelTimeStep,numtim,data_step)
+ ! perform river network routing
+ if (exec_routing) then
+  call route_sync_run_stepping(summa1_struc(n),modelTimeStep,numtim,data_step)
+ end if 
 
 end do  ! looping through time
 
