@@ -6,8 +6,12 @@ find_path(NetCDF_C_INCLUDE_DIR NAMES netcdf.h)
 
 # Find the NetCDF Fortran library
 find_library(NetCDF_F90_LIBRARY NAMES netcdff)
-find_path(NetCDF_F90_INCLUDE_DIR NAMES netcdf.mod)
-
+find_path(NetCDF_F90_INCLUDE_DIR
+    NAMES netcdf.mod
+    PATHS
+        /usr/include
+        /usr/lib64/gfortran/modules
+)
 set (NetCDF_LIBRARIES ${NetCDF_C_LIBRARY} ${NetCDF_F90_LIBRARY})
 set (NetCDF_INCLUDE_DIRS ${NetCDF_C_INCLUDE_DIR} ${NetCDF_F90_INCLUDE_DIR})
 
