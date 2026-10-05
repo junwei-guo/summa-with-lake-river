@@ -411,16 +411,17 @@ CONTAINS
   meta_SEG    (ixSEG%slope           )%varName = trim(info%ntopo%varname_slope)     ! slope of segment   (-)
 
   ! DIMENSION NAMES for remapping (overwrite default name in public_var.f90)
-  dname_hru_remap      = trim(info%remap%dname_hru)         ! dimension name for river network HRU
-  dname_data_remap     = trim(info%remap%dname_data)        ! dimension name for runoff HRU ID
+  if(allocated(info%remap%dname_hru)) dname_hru_remap      = trim(info%remap%dname_hru)         ! dimension name for river network HRU
+  if(allocated(info%remap%dname_data)) dname_data_remap     = trim(info%remap%dname_data)        ! dimension name for runoff HRU ID
   
   ! VARIABLE NAMES for remapping (overwrite default name in public_var.f90)
-  vname_hruid_in_remap = trim(info%remap%vname_hruid)       ! variable name for river network hru id
-  vname_weight         = trim(info%remap%vname_weight)      ! variable name for areal weights of runoff HRUs within each river network
-  vname_num_qhru       = trim(info%remap%vname_num_qhru)    ! variable for numbers of runoff HRUs within each river network HRU
-  vname_i_index        = trim(info%remap%vname_i_index)     ! variable for numbers of y (latitude) index (if runoff file is grid)
-  vname_j_index        = trim(info%remap%vname_j_index)     ! variable for numbers of x (longitude) index (if runoff file is grid)
-  vname_qhruid         =  trim(info%remap%vname_qhruid)     ! variable for HRU ID in the runoff file (if runoff file is hru)
+  if(allocated(info%remap%vname_hruid)) vname_hruid_in_remap = trim(info%remap%vname_hruid)       ! variable name for river network hru id
+  if(allocated(info%remap%vname_weight)) vname_weight         = trim(info%remap%vname_weight)      ! variable name for areal weights of runoff HRUs within each river network
+  if(allocated(info%remap%vname_num_qhru)) vname_num_qhru       = trim(info%remap%vname_num_qhru)    ! variable for numbers of runoff HRUs within each river network HRU
+  if(allocated(info%remap%vname_i_index)) vname_i_index        = trim(info%remap%vname_i_index)     ! variable for numbers of y (latitude) index (if runoff file is grid)
+  if(allocated(info%remap%vname_j_index)) vname_j_index        = trim(info%remap%vname_j_index)     ! variable for numbers of x (longitude) index (if runoff file is grid)
+  if(allocated(info%remap%vname_qhruid)) vname_qhruid         =  trim(info%remap%vname_qhruid)     ! variable for HRU ID in the runoff file (if runoff file is hru)
+
 
   ! routing methods
   call char2int(trim(info%mrout%methods), routeMethods, invalid_value=0)

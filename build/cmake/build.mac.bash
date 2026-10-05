@@ -12,9 +12,11 @@ export FC=/opt/homebrew/bin/gfortran                             # Fortran compi
 export LIBRARY_LINKS='-llapack'                               # list of library links
 export SUNDIALS_DIR=../../../sundials/build/
 
+rm -rf cmake_build
+
 cmake -B ../cmake_build -S ../. \
-    -DUSE_MPI=ON \
-    -DUSE_SUNDIALS=ON \
+    -DUSE_MPI=OFF \
+    -DUSE_SUNDIALS=OFF \
     -DUSE_MIZUROUTE=ON \
     -DSPECIFY_LAPACK_LINKS=ON \
     -DCMAKE_BUILD_TYPE=Release

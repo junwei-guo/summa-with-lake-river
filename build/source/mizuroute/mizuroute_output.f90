@@ -29,7 +29,7 @@ contains
     character(*),           intent(out) :: message
 
     integer(i4b) :: dim_time, dim_hru, dim_seg, dim_method
-    integer(i4b) :: varid_hru, varid_seg, varid_method
+    integer(i4b) :: varid_hru, varid_seg, varid_method, varid_owner
     integer(i4b) :: varid_uparea, varid_qbasin, varid_Qreach
     integer(i4b), dimension(2) :: dimids_basin
     integer(i4b), dimension(3) :: dimids_reach
@@ -88,6 +88,14 @@ contains
       ierr = nf90_def_var(ncid, 'seg', NF90_INT, (/dim_seg/), varid_seg);             if(ierr/=nf90_noerr) exit netcdf_block
       ierr = nf90_put_att(ncid, varid_seg, 'units', '-');                             if(ierr/=nf90_noerr) exit netcdf_block
 
+      ! Expose reach ownership so partitioned runs can be audited.
+      ierr = nf90_def_var(ncid, 'seg_owner', NF90_INT, (/dim_seg/), varid_owner)
+      if(ierr/=nf90_noerr) exit netcdf_block
+      ierr = nf90_put_att(ncid, varid_owner, 'long_name', 'zero-based MPI rank that advances each reach')
+      if(ierr/=nf90_noerr) exit netcdf_block
+      ierr = nf90_put_att(ncid, NF90_GLOBAL, 'routing_mpi_size', domain%river_network%driver%parallel%nproc)
+      if(ierr/=nf90_noerr) exit netcdf_block
+
       ! coordinate variables: method
       ierr = nf90_def_var(ncid, 'method', NF90_INT, (/dim_method/), varid_method);    if(ierr/=nf90_noerr) exit netcdf_block
       ierr = nf90_put_att(ncid, varid_method, 'long_name', 'routing method');         if(ierr/=nf90_noerr) exit netcdf_block
@@ -106,6 +114,9 @@ contains
 
       ! upstream area
       ierr = nf90_put_var(ncid, varid_uparea, domain%river_network%driver%totArea); if(ierr/=nf90_noerr) exit netcdf_block
+
+      ierr = nf90_put_var(ncid, varid_owner, domain%river_network%driver%parallel%owner)
+      if(ierr/=nf90_noerr) exit netcdf_block
 
       ! coordinate data
       ierr = nf90_put_var(ncid, varid_hru,    domain%river_network%driver%hru_id);  if(ierr/=nf90_noerr) exit netcdf_block

@@ -26,6 +26,7 @@ contains
     use process_remap_module, only: remap_runoff
     use process_remap_module, only: basin2reach
 
+    use routing_parallel, only: exchange_level, collect_streamflow
     USE globalData,           only: rch_routes  ! routing methods instantiated
 
     implicit none
@@ -42,7 +43,7 @@ contains
 
     ! locals
     integer(i4b) :: ix
-    integer(i4b) :: iSeg,jSeg
+    integer(i4b) :: iSeg,jSeg,stage
     integer(i4b) :: n_seg
     real(dp)     :: T0,T1
     real(dp)     :: fracStep
@@ -66,7 +67,8 @@ contains
                         ierr, cmessage)                            ! output: error control
       if (ierr /= 0) then; message = trim(message)//trim(cmessage); return; end if
     else
-      river_network%core%runoff%basinRunoff = river_network%core%runoff%sim
+      river_network%core%runoff%basinRunoff = &
+        river_network%core%runoff%sim(river_network%driver%parallel%runoff_index)
     end if
 
     ! save basin runoff for host-model output
@@ -112,10 +114,13 @@ contains
         T1 = real(iSub,   dp) * river_network%driver%time%dt_sub
 
         ! * loop through stream segments
-        do iSeg = 1, n_seg
+        do stage = 1, size(river_network%driver%parallel%level_start)-1
+        do iSeg = river_network%driver%parallel%level_start(stage), &
+                  river_network%driver%parallel%level_start(stage+1)-1
   
           ! process segments in the prescribed upstream-to-downstream routing order
-          jSeg = river_network%core%topology%ntopo(iSeg)%var(ixNTOPO%rchOrder)%dat(1)
+          jSeg = river_network%driver%parallel%level_order(iSeg)
+          if(river_network%driver%parallel%owner(jSeg) /= river_network%driver%parallel%rank) cycle
    
           ! route runoff for segment jSeg using method ix
           call rch_route%route(jSeg,                       &
@@ -133,10 +138,15 @@ contains
 
         end do  ! * loop through stream segments
 
-        !stop 'check'
+        call exchange_level(river_network,stage,ix,ierr,cmessage)
+        if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
+        enddo ! dependency stages
 
       end do  ! * loop through substeps
    
+      call collect_streamflow(river_network,ix,sub_idx,ierr,cmessage)
+      if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
+
       end associate
    
     end do ! * loop through routing methods

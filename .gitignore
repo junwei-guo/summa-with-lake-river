@@ -53,6 +53,7 @@ site/
 
 # cmake_build containing cmake build objects
 build/cmake_build
+build/cmake/cmake_build
 runinfo.txt
 
 # OpenWQ source code
@@ -71,3 +72,6 @@ test_ngen/domain_provo/forcing/SUMMA_input/*.nc
 test_ngen/domain_provo/simulations/run_1/SUMMA/*.nc
 test_ngen/domain_provo/simulations/*.nc
 test_ngen/domain_provo/simulations/*.csv
+
+# Coupled MPI build
+build/cmake_mpi

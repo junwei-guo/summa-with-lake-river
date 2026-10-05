@@ -22,6 +22,7 @@ module mizuroute_types
   public :: remap_info
   public :: mizuroute_info
 
+  public :: routing_parallel_data
   public :: routing_time_data
   public :: mizuroute_topology
   public :: river_network_data
@@ -166,7 +167,15 @@ module mizuroute_types
     real(wp),               allocatable  :: streamflow(:,:) 
   end type routing_output
 
+  type :: routing_parallel_data
+    integer(i4b) :: comm = -1, rank = 0, nproc = 1
+    integer(i4b), allocatable :: counts(:), offsets(:), host_owner(:)
+    integer(i4b), allocatable :: owner(:), level_order(:), level_start(:), runoff_index(:)
+  end type routing_parallel_data
+
   type :: river_network_driver
+
+    type(routing_parallel_data) :: parallel
 
     ! IDs used by the driver
     integer(i4b), allocatable :: hru_id(:)

@@ -228,7 +228,10 @@ contains
   subroutine init_mizuroute_from_summa(summaStruct, ierr, message)
  
   USE nr_utils,       only: match_index
-  USE init_mizuRoute, only: init_mizuroute_domain 
+  USE init_mizuRoute, only: init_mizuroute_domain
+  USE nr_type, only: i8b
+  USE routing_parallel, only: collect_runoff_ids, plan_routing
+  USE globalData, only: masterproc
 
   type(summa1_type_dec), intent(inout) :: summaStruct
   integer,               intent(out)   :: ierr
@@ -238,6 +241,7 @@ contains
   real(rkind)                          :: time_conv
   integer(i4b)                         :: iGRU
   integer(i4b)                         :: nSpace(1:2) = integerMissing
+  integer(i8b), allocatable            :: host_ids(:)
   integer(i4b)                         :: n_write
   character(len=256)                   :: cmessage
   
@@ -252,7 +256,8 @@ contains
   ! -----------------------------------------------------------------------
   
   ! general info
-  info%is_print     = .true.
+  masterproc = summaStruct%parallel%rank == 0
+  info%is_print     = masterproc
   info%do_mizuroute = .true.
   info%do_remapping = allocated(info%remap%remap_file)
   
@@ -261,7 +266,13 @@ contains
   info%dt_landmodel = summaStruct%data_step
   
   ! SUMMA provides runoff on a one-dimensional basin (GRU) domain 
-  nSpace(1) = summaStruct%nGRU_local
+  domain%river_network%driver%parallel%comm = summaStruct%parallel%comm
+  domain%river_network%driver%parallel%rank = summaStruct%parallel%rank
+  domain%river_network%driver%parallel%nproc = summaStruct%parallel%size
+  call collect_runoff_ids(domain%river_network%driver%parallel, summaStruct%coupling(:)%id, &
+                          host_ids, ierr, cmessage)
+  if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
+  nSpace(1) = size(host_ids)
   nSpace(2) = integerMissing
   
   info%is_gridded = (nSpace(2) /= integerMissing)
@@ -284,9 +295,12 @@ contains
   ! -----------------------------------------------------------------------
   
   call init_mizuroute_domain(info, domain, nSpace, n_write,  &
-                             summaStruct%coupling(:)%id,     &
+                             host_ids,     &
                              length_conv, time_conv,         &
                              ierr, cmessage)
+  if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
+
+  call plan_routing(domain%river_network, domain%remap%routing, info%do_remapping, ierr, cmessage)
   if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
 
   end associate
@@ -300,6 +314,8 @@ contains
   ! Network routing in mizuRoute
   !-----------------------------------------------------------------------
   subroutine route_mizuroute_from_summa(modelTimeStep, summaStruct, ierr, message)
+
+  USE routing_parallel, only: collect_runoff
  
   USE network_routing_module, only: network_routing
 
@@ -322,7 +338,9 @@ contains
     idx_buff = merge(1, modelTimeStep, summaStruct%n_write == 1)
   
     ! Transfer summa routed runoff into the mizuRoute runoff structure
-    domain%river_network%core%runoff%sim(:) = summaStruct%coupling(:)%qsim
+    call collect_runoff(domain%river_network%driver%parallel, summaStruct%coupling(:)%qsim, &
+                        domain%river_network%core%runoff%sim, ierr, cmessage)
+    if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
 
     ! Route the complete runoff field
     call network_routing(idx_buff,             &
@@ -356,6 +374,9 @@ contains
   ierr = 0
   message = 'define_mizuroute_output_from_summa/'
   
+  ! Store the complete routed network only in the rank-zero SUMMA output file.
+  if(summaStruct%parallel%rank /= 0) return
+
   call define_mizuroute_output(ncid,                      &
                                summaStruct%mizu_info,     &
                                summaStruct%mizu_domain,   &
@@ -386,6 +407,8 @@ contains
 
   ierr = 0
   message = 'write_mizuroute_output_from_summa/'
+
+  if(summaStruct%parallel%rank /= 0) return
 
   call write_mizuroute_output(ncid,                    &
                               istart,                   &

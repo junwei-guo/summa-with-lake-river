@@ -252,6 +252,10 @@ if (USE_MIZUROUTE)
       ${MIZU_INIT} ${MIZU_RMAP} ${MIZU_ROUTE} ${MIZU_OUTPUT})
     target_compile_options(MIZUROUTE PRIVATE ${FLAGS_ALL})
     target_link_libraries(MIZUROUTE PUBLIC MIZUROUTE_TYPES NetCDF::NetCDF)
+    if(USE_MPI)
+      target_link_libraries(MIZUROUTE PUBLIC MPI::MPI_Fortran)
+      target_compile_definitions(MIZUROUTE PRIVATE ROUTING_MPI)
+    endif()
     set_target_properties(MIZUROUTE PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/mizuroute_mod)
 
     # SUMMA-facing mizuRoute coupling layer

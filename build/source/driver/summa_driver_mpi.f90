@@ -115,7 +115,7 @@ contains
    ! *** Initial operations for SUMMA driver program ***
 
    allocate(summa1_struc(n), stat=err)
-   if (err/=0) call handle_err(err, 'problem allocating master summa structure')
+   if (err/=0) call abort_mpi(rank, 'problem allocating master summa structure')
 
    summa1_struc(n)%parallel%comm = MPI_COMM_WORLD
    summa1_struc(n)%parallel%rank = rank
@@ -123,15 +123,15 @@ contains
 
    ! declare and allocate summa data structures and initialize model state to known values
    call summa_initialize(summa1_struc(n), err, message)
-   call handle_err(err, message)
+   if (err /= 0) call abort_mpi(rank, trim(message))
 
    ! initialize parameter data structures (e.g. vegetation and soil parameters)
    call summa_paramSetup(summa1_struc(n), err, message)
-   call handle_err(err, message)
+   if (err /= 0) call abort_mpi(rank, trim(message))
 
    ! read restart data and reset the model state
    call summa_readRestart(summa1_struc(n), err, message)
-   call handle_err(err, message)
+   if (err /= 0) call abort_mpi(rank, trim(message))
 
   end subroutine initialize_summa_driver
 
@@ -147,7 +147,7 @@ contains
  
      ! read model forcing data
      call summa_readForcing(modelTimeStep, summa1_struc(n), err, message)
-     call handle_err(err, message)
+     if (err /= 0) call abort_mpi(rank, trim(message))
  
      if (mod(modelTimeStep, print_step_freq) == 0) then
        print *, 'step ---> ', modelTimeStep
@@ -155,11 +155,11 @@ contains
  
      ! run the summa physics for one time step
      call summa_runPhysics(modelTimeStep, summa1_struc(n), err, message)
-     call handle_err(err, message)
+     if (err /= 0) call abort_mpi(rank, trim(message))
  
      ! write the model output
      call summa_writeOutputFiles(modelTimeStep, summa1_struc(n), err, message)
-     call handle_err(err, message)
+     if (err /= 0) call abort_mpi(rank, trim(message))
  
    end do  ! end looping through time
   end subroutine update_summa_driver

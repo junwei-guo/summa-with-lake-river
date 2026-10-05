@@ -47,7 +47,7 @@ module globalData
 
   ! ---------- Misc. data -------------------------------------------------------------------------
 
-  logical(lgt),                    public :: masterproc
+  logical(lgt),                    public :: masterproc = .true.
   integer(i4b),                    public :: maxtdh=0                    ! maximum unit-hydrograph future time steps
   type(cMolecule),                 public :: nMolecule                   ! number of computational molecule (used for KW, MC, DW)
 

@@ -56,7 +56,7 @@ CONTAINS
   USE public_var, ONLY: ntopAugmentMode          ! River network augmentation mode
   USE public_var, ONLY: idSegOut                 ! River network subset mode (idSegOut > 0)
   ! global data
-  USE globalData, ONLY: meta_PFAF                ! meta for pfafstetter code
+  USE globalData, ONLY: masterproc, meta_PFAF                ! meta for pfafstetter code
   ! external subroutines
   USE read_streamSeg,       ONLY: getData                  ! get the ancillary data
   USE write_streamSeg,      ONLY: writeData                ! write the ancillary data
@@ -131,7 +131,7 @@ CONTAINS
   if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
 
   ! write network topology (if augment mode or subset mode)
-  if(ntopAugmentMode .or. idSegOut>0)then
+  if((ntopAugmentMode .or. idSegOut>0) .and. masterproc)then
 
     ! disable the dimension containing all upstream reaches
     ! NOTE: For the CONUS this is 1,872,516,819 reaches !!
