@@ -113,14 +113,14 @@ contains
       in_define = .false.
 
       ! upstream area
-      ierr = nf90_put_var(ncid, varid_uparea, domain%river_network%driver%totArea); if(ierr/=nf90_noerr) exit netcdf_block
+      ierr = nf90_put_var(ncid, varid_uparea, domain%river_network%driver%output_area); if(ierr/=nf90_noerr) exit netcdf_block
 
-      ierr = nf90_put_var(ncid, varid_owner, domain%river_network%driver%parallel%owner)
+      ierr = nf90_put_var(ncid, varid_owner, domain%river_network%driver%output_owner)
       if(ierr/=nf90_noerr) exit netcdf_block
 
       ! coordinate data
-      ierr = nf90_put_var(ncid, varid_hru,    domain%river_network%driver%hru_id);  if(ierr/=nf90_noerr) exit netcdf_block
-      ierr = nf90_put_var(ncid, varid_seg,    domain%river_network%driver%seg_id);  if(ierr/=nf90_noerr) exit netcdf_block
+      ierr = nf90_put_var(ncid, varid_hru,    domain%river_network%driver%output_hru_id);  if(ierr/=nf90_noerr) exit netcdf_block
+      ierr = nf90_put_var(ncid, varid_seg,    domain%river_network%driver%output_seg_id);  if(ierr/=nf90_noerr) exit netcdf_block
       ierr = nf90_put_var(ncid, varid_method, routeMethods);                        if(ierr/=nf90_noerr) exit netcdf_block
     
     end block netcdf_block
@@ -140,6 +140,7 @@ contains
   ! Write mizuRoute streamflow to an existing host-model NetCDF file
   !-----------------------------------------------------------------------
   subroutine write_mizuroute_output(ncid, istart, numtim, info, domain, ierr, message)
+    use routing_parallel, only: gather_output
   
     integer(i4b),            intent(in)  :: ncid
     integer(i4b),            intent(in)  :: istart
@@ -149,50 +150,35 @@ contains
     integer(i4b),            intent(out) :: ierr
     character(*),            intent(out) :: message
   
-    integer(i4b) :: varid_qbasin, varid_Qreach
-    integer(i4b) :: iRoute
-    integer(i4b), dimension(2) :: start2_basin, count2_basin
-    integer(i4b), dimension(3) :: start3_reach, count3_reach
-  
+    integer(i4b) :: varid_qbasin, varid_Qreach, t, iRoute
+    real(dp), allocatable :: basin(:), discharge(:)
+
     ierr = 0
     message = 'write_mizuroute_output/'
-  
-    netcdf_block: block
-  
-      ! get variable ID
-      ierr = nf90_inq_varid(ncid, 'q_basin', varid_qbasin); if(ierr/=nf90_noerr) exit netcdf_block
-      ierr = nf90_inq_varid(ncid, 'Q_reach', varid_Qreach); if(ierr/=nf90_noerr) exit netcdf_block
-  
-      ! basin runoff
-      start2_basin = (/1,          istart/)
-      count2_basin = (/info%n_hru, numtim/)
-      
-      ierr = nf90_put_var(ncid, varid_qbasin, &
-                          domain%river_network%driver%basin_runoff(:,1:numtim), &
-                          start=start2_basin, count=count2_basin)
-      if(ierr/=nf90_noerr) exit netcdf_block
-
-      ! reach stream for each active routing method
-      do iRoute = 1,size(domain%river_network%driver%method)
-
-        start3_reach = (/iRoute,          1, istart/)
-        count3_reach = (/     1, info%n_seg, numtim/)
- 
-        ierr = nf90_put_var(ncid, varid_Qreach, &
-                            domain%river_network%driver%method(iRoute)%streamflow(:,1:numtim), &
-                            start=start3_reach, count=count3_reach)
-        if(ierr/=nf90_noerr) exit netcdf_block
-
-      enddo
-  
-    end block netcdf_block
-  
-    if(ierr/=nf90_noerr)then
-      message = trim(message)//trim(nf90_strerror(ierr))
-      return
+    associate(net=>domain%river_network, p=>domain%river_network%driver%parallel)
+    if(p%rank==0) then
+      ierr=nf90_inq_varid(ncid,'q_basin',varid_qbasin)
+      if(ierr/=nf90_noerr) then; message=trim(message)//trim(nf90_strerror(ierr)); return; endif
+      ierr=nf90_inq_varid(ncid,'Q_reach',varid_Qreach)
+      if(ierr/=nf90_noerr) then; message=trim(message)//trim(nf90_strerror(ierr)); return; endif
     endif
-  
+    do t=1,numtim
+      call gather_output(p,p%basins,net%driver%basin_runoff(:,t),basin,ierr)
+      if(ierr/=0) return
+      if(p%rank==0) then
+        ierr=nf90_put_var(ncid,varid_qbasin,basin,start=[1,istart+t-1],count=[info%n_hru,1])
+        if(ierr/=nf90_noerr) then; message=trim(message)//trim(nf90_strerror(ierr)); return; endif
+      endif
+      do iRoute=1,size(net%driver%method)
+        call gather_output(p,p%reaches,net%driver%method(iRoute)%streamflow(:,t),discharge,ierr)
+        if(ierr/=0) return
+        if(p%rank==0) then
+          ierr=nf90_put_var(ncid,varid_Qreach,discharge,start=[iRoute,1,istart+t-1],count=[1,info%n_seg,1])
+          if(ierr/=nf90_noerr) then; message=trim(message)//trim(nf90_strerror(ierr)); return; endif
+        endif
+      enddo
+    enddo
+    end associate
   end subroutine write_mizuroute_output
-
 
 end module mizuroute_output_module

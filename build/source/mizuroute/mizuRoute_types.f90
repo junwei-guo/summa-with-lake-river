@@ -22,6 +22,7 @@ module mizuroute_types
   public :: remap_info
   public :: mizuroute_info
 
+  public :: routing_gather
   public :: routing_parallel_data
   public :: routing_time_data
   public :: mizuroute_topology
@@ -167,10 +168,20 @@ module mizuroute_types
     real(wp),               allocatable  :: streamflow(:,:) 
   end type routing_output
 
+  ! Gather layout: global positions exist only on the output rank.
+  type :: routing_gather
+    integer(i4b), allocatable :: counts(:), offsets(:), index(:)
+  end type
+
   type :: routing_parallel_data
     integer(i4b) :: comm = -1, rank = 0, nproc = 1
     integer(i4b), allocatable :: counts(:), offsets(:), host_owner(:)
     integer(i4b), allocatable :: owner(:), level_order(:), level_start(:), runoff_index(:)
+    integer(i4b) :: n_local = 0, n_ghost = 0
+    integer(i4b), allocatable :: send_counts(:), send_offsets(:), recv_counts(:), recv_offsets(:), send_index(:)
+    integer(i4b), allocatable :: edge_local(:), edge_peer(:), edge_stage(:)
+    logical, allocatable :: edge_send(:)
+    type(routing_gather) :: reaches, basins
   end type routing_parallel_data
 
   type :: river_network_driver
@@ -181,6 +192,10 @@ module mizuroute_types
     integer(i4b), allocatable :: hru_id(:)
     integer(i4b), allocatable :: seg_id(:)
    
+    ! Global coordinates retained only by rank zero for the unchanged output format.
+    integer(i4b), allocatable :: output_hru_id(:), output_seg_id(:), output_owner(:)
+    real(wp), allocatable :: output_area(:)
+
     ! Network attributes used by the driver
     real(wp), allocatable :: totArea(:)
    
