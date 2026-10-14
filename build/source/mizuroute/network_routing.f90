@@ -47,6 +47,9 @@ contains
     integer(i4b) :: n_seg
     real(dp)     :: T0,T1
     real(dp)     :: fracStep
+    ! Match standalone sort_runoff: discard missing/negative runoff below
+    ! its input tolerance, while preserving the raw SUMMA runoff outputs.
+    real(dp), parameter :: runoff_input_tolerance = 1.e-6_dp
     integer(i4b) :: iSub
     character(len=256)  :: cmessage
 
@@ -69,6 +72,11 @@ contains
     else
       river_network%core%runoff%basinRunoff = &
         river_network%core%runoff%sim(river_network%driver%parallel%runoff_index)
+      ! remap_runoff already applies this test before weighting and normalization.
+      ! The direct ID-matching path must also exclude inactive-water placeholders.
+      where (.not. (river_network%core%runoff%basinRunoff > -runoff_input_tolerance))
+        river_network%core%runoff%basinRunoff = 0._dp
+      end where
     end if
 
     ! save basin runoff for host-model output

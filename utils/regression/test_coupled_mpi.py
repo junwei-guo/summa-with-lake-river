@@ -9,13 +9,15 @@ import os
 from datetime import datetime, timedelta
 from pathlib import Path
 import re
+import shutil
 import subprocess
 
 import numpy as np
 from netCDF4 import Dataset
 
 
-def run_case(root, work, name, ranks, methods, dt, remap=True, buffered=False, augmented=False, mapping="identity"):
+def run_case(root, work, name, ranks, methods, dt, remap=True, buffered=False,
+             augmented=False, mapping="identity", open_water=False):
     case = work / name
     case.mkdir(parents=True, exist_ok=False)
     fm = (root / 'bow_at_banff/fileManager.txt').read_text()
@@ -23,6 +25,19 @@ def run_case(root, work, name, ranks, methods, dt, remap=True, buffered=False, a
     end = (start + timedelta(hours=23)).strftime('%Y-%m-%d %H:%M')
     fm = re.sub(r"simEndTime\s+'[^']+'", f"simEndTime '{end}'", fm)
     fm = re.sub(r"outputPath\s+'[^']+'", f"outputPath '{case}/'", fm)
+    water_grus = set()
+    if open_water:
+        # Reproduce inactive-water missing fluxes on several SUMMA owners.
+        attributes = case / 'attributes.nc'
+        shutil.copyfile(root / 'bow_at_banff/attributes.nc', attributes)
+        with Dataset(attributes, 'a') as nc:
+            water_grus = set(map(int, nc['gruId'][::17]))
+            water_hrus = np.isin(nc['hru2gruId'][:], list(water_grus))
+            vegetation = nc['vegTypeIndex'][:]
+            vegetation[water_hrus] = 17  # MODIFIED_IGBP_MODIS_NOAH open water
+            nc['vegTypeIndex'][:] = vegetation
+        relative = os.path.relpath(attributes, root / 'bow_at_banff')
+        fm = re.sub(r"attributeFile\s+'[^']+'", f"attributeFile '{relative}'", fm)
     if buffered:
         decisions = (root / 'bow_at_banff/modelDecisions.txt').read_text()
         decisions = re.sub(r'^write_buff\s+.*$', '', decisions, flags=re.M)
@@ -127,8 +142,28 @@ def run_case(root, work, name, ranks, methods, dt, remap=True, buffered=False, a
         assert (int(nreach), int(nghost), int(nhru)) == (owned, ghosts, owned), storage
 
     out['runoff'] = np.stack([runoff[k] for k in sorted(runoff)], axis=1)
-    expected = np.stack([sum(w * runoff[g] for g, w in sources[int(k)]) for k in out['mizu_hru']], axis=1)
+    # Match standalone sort_runoff/remap_runoff: exclude values <= -1e-6,
+    # retain tiny negatives, and renormalize valid contributing remap weights.
+    expected = []
+    for basin in out['mizu_hru']:
+        values = np.zeros(24)
+        weights = np.zeros(24)
+        for gru, weight in sources[int(basin)]:
+            valid = runoff[gru] > -1.e-6
+            values += np.where(valid, weight * runoff[gru], 0.)
+            weights += np.where(valid, weight, 0.)
+        if remap:
+            renormalize = (weights > 1.e-6) & (np.abs(1. - weights) > 1.e-6)
+            values[renormalize] /= weights[renormalize]
+        expected.append(values)
+    expected = np.stack(expected, axis=1)
     np.testing.assert_array_equal(out['q_basin'], expected)
+    if open_water:
+        assert water_grus
+        assert all(np.all(runoff[g] < -1.e-3) for g in water_grus), 'Fixture must reproduce negative raw SUMMA runoff'
+        if mapping == 'identity':
+            water_columns = np.isin(out['mizu_hru'], list(water_grus))
+            assert np.all(out['q_basin'][:, water_columns] == 0.)
     print(f'{name}: 24 steps; complete routing output; correct basin mapping', flush=True)
     return out
 
@@ -198,6 +233,15 @@ if __name__ == '__main__':
     for mapping in ('mixed', 'single_source'):
         ref = run_case(root, work, f'serial_{mapping}', 0, '3', 900, mapping=mapping)
         compare(ref, run_case(root, work, f'mpi4_{mapping}', 4, '3', 900, mapping=mapping))
+    ref = run_case(root, work, 'serial_water_no_remap', 0, '3', 900,
+                   remap=False, open_water=True)
+    compare(ref, run_case(root, work, 'mpi3_water_no_remap', 3, '3', 900,
+                          remap=False, open_water=True))
+    compare(ref, run_case(root, work, 'mpi3_water_remap', 3, '3', 900, open_water=True))
+    ref = run_case(root, work, 'serial_water_mixed', 0, '3', 900,
+                   mapping='mixed', open_water=True)
+    compare(ref, run_case(root, work, 'mpi4_water_mixed', 4, '3', 900,
+                          mapping='mixed', open_water=True))
     check_rank_failure(root, work)
     check_initialization_failure(root, work)
     print('PASS: serial/MPI, uneven partitions, all supported methods, substeps, and ID ordering.', flush=True)

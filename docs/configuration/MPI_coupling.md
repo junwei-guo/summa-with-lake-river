@@ -66,6 +66,14 @@ The no-remapping path also matches basin IDs to GRU IDs explicitly; it no longer
 assumes that NetCDF arrays have identical ordering. Remapping must cover all
 routing basins and refer to GRUs in the selected full domain.
 
+Runoff input filtering follows standalone mizuRoute. In the direct ID-matching
+path, values at or below `-1e-6 m/s` become zero before river routing; tiny negative
+values above that threshold are retained. This handles the missing-flux runoff
+produced when SUMMA skips open-water HRUs. The remapping path already excludes
+these inputs and renormalizes valid contributing weights. Raw SUMMA
+`averageRoutedRunoff` outputs remain unchanged; `q_basin` records the runoff used
+by mizuRoute after filtering/remapping.
+
 ## Output
 
 Each rank writes its existing local SUMMA output, with a GRU-range suffix. Only
@@ -105,6 +113,7 @@ ownership, checks finite and unmasked routing output, and exercises:
 - the configured outlet subset and rank-zero topology generation;
 - differing ID order with remapping disabled;
 - cross-rank weighted runoff remapping and ranks with no owned routing reaches;
+- open-water negative runoff with direct matching and weighted remapping;
 - allocated reach/ghost/HRU counts against expected ownership;
 - exactly one legacy hydrofabric reader, including multi-rank runs;
 - propagation of a root-reader failure without hanging workers;
