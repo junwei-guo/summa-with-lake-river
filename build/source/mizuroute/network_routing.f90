@@ -26,7 +26,7 @@ contains
     use process_remap_module, only: remap_runoff
     use process_remap_module, only: basin2reach
 
-    use routing_parallel, only: exchange_level, collect_streamflow
+    use routing_parallel, only: exchange_level
     USE globalData,           only: rch_routes  ! routing methods instantiated
 
     implicit none
@@ -79,12 +79,16 @@ contains
     !---------------------------------------------------------------------
 
     ! aggregate basin runoff to each stream segment and convert runoff depth to volumetric lateral inflow
+    ! The upstream basin2reach helper assumes a nonempty reach list.
+    if(n_seg>0) then
     call basin2reach(river_network%core%runoff%basinRunoff,    & ! input: basin runoff (m/s)
                      river_network%core%ntopo,                 & ! input: reach topology
                      river_network%core%param,                 & ! input: reach parameter
                      river_network%driver%reach_inflow,        & ! output: reach inflow (m3/s)
                      ierr, cmessage)                             ! output: error control
     if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
+
+    endif
 
     ! transfer lateral inflow (routing workspace) to flux data structures
     do iSeg = 1, n_seg
@@ -120,7 +124,6 @@ contains
   
           ! process segments in the prescribed upstream-to-downstream routing order
           jSeg = river_network%driver%parallel%level_order(iSeg)
-          if(river_network%driver%parallel%owner(jSeg) /= river_network%driver%parallel%rank) cycle
    
           ! route runoff for segment jSeg using method ix
           call rch_route%route(jSeg,                       &
@@ -144,8 +147,6 @@ contains
 
       end do  ! * loop through substeps
    
-      call collect_streamflow(river_network,ix,sub_idx,ierr,cmessage)
-      if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
 
       end associate
    

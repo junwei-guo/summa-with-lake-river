@@ -99,6 +99,7 @@ CONTAINS
   use process_ntopo,       only: put_data_struct      ! copy data to the new structures 
   use read_remap,          only: get_remap_data       ! read remap data
 
+  use routing_parallel, only: plan_routing, localize_routing
   use nr_utils,            only: match_index
 
   implicit none
@@ -254,22 +255,8 @@ CONTAINS
   onRoute(:) = .false.
   onRoute(routeMethods) = .true.
    
-  call allocate_mizuroute_domain(info,                                 &
-                                 domain%river_network,                 &
-                                 nSpace, n_write,                      &
-                                 ierr, cmessage)
-  if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
-
-  !---------------------------------------------------------------------
-  ! Populate IDs of host-model runoff elements 
-  !---------------------------------------------------------------------
-  
-  if(size(domain%river_network%core%runoff%hru_id) /= size(hostmodel_runoff_ids))then
-    message=trim(message)//'number of SUMMA runoff elements does not match mizuRoute runoff dimension'
-    ierr=20; return
-  endif
-
-  domain%river_network%core%runoff%hru_id(:) = hostmodel_runoff_ids(:)
+  ! IDs and remapping are needed to plan ownership before allocating any state.
+  domain%river_network%core%runoff%hru_id = hostmodel_runoff_ids
 
   !---------------------------------------------------------------------
   ! Define indices to support remapping 
@@ -290,6 +277,13 @@ CONTAINS
     if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
 
   endif ! if remapping file exists
+
+  call plan_routing(domain%river_network, domain%remap%routing, info%do_remapping, ierr, cmessage)
+  if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
+  call localize_routing(domain%river_network, domain%remap%routing, info%do_remapping, ierr, cmessage)
+  if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
+  call allocate_mizuroute_domain(info, domain%river_network, nSpace, n_write, ierr, cmessage)
+  if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
 
  end subroutine init_mizuroute_domain
 
@@ -510,21 +504,18 @@ CONTAINS
 
    ! ---- spatial information in mizuRoute ----
 
-   n_hru  = info%n_hru
-   n_seg  = info%n_seg
+   n_hru  = river_network%core%topology%n_hru
+   n_seg  = river_network%core%topology%n_seg
 
    ! ---- allocate space for runoff inputs ----
    
-   river_network%core%runoff%nSpace    = nSpace
+   river_network%core%runoff%nSpace    = [size(river_network%core%runoff%hru_id), integerMissing]
    river_network%core%runoff%fillvalue = realMissing
    
    ! 1-D HRU runoff
    if ( .not. info%is_gridded ) then
      
-     allocate(river_network%core%runoff%hru_id(nSpace(1)), stat=ierr)
-     if(ierr/=0)then; message=trim(message)//'unable to allocate basin hru id'; return; endif
-
-     allocate(river_network%core%runoff%sim(nSpace(1)), stat=ierr)
+     allocate(river_network%core%runoff%sim(size(river_network%core%runoff%hru_id)), stat=ierr)
      if(ierr/=0)then; message=trim(message)//'unable to allocate basin runoff input'; return; endif
 
    ! 2-D gridded runoff
@@ -540,11 +531,16 @@ CONTAINS
    ! ---- initialize network states and fluxes ----
    
    ! allocate space for all segments in the river network
-   allocate(river_network%core%flux(n_seg),  &
+   allocate(river_network%core%flux(n_seg+river_network%driver%parallel%n_ghost),  &
             river_network%core%state(n_seg), & 
             river_network%driver%reach_inflow(n_seg), stat=ierr)
    if(ierr/=0)then; message=trim(message)//'unable to allocate river_network flux/state'; return; endif
    
+   do iSeg = n_seg+1, size(river_network%core%flux)
+     allocate(river_network%core%flux(iSeg)%ROUTE(nRoutes))
+     river_network%core%flux(iSeg)%ROUTE(:)%REACH_Q = 0._dp
+   enddo
+
    ! * loop through stream segments
    do iSeg = 1, n_seg
    
@@ -639,6 +635,11 @@ CONTAINS
     end if
   
   end do
+
+  write(*,'(a,i0,3(a,i0))') 'Routing local storage rank ',river_network%driver%parallel%rank, &
+    ': reaches=',size(river_network%core%state), &
+    ', ghost fluxes=',size(river_network%core%flux)-size(river_network%core%state), &
+    ', HRUs=',size(river_network%core%runoff%basinRunoff)
 
  end subroutine allocate_mizuroute_domain 
 

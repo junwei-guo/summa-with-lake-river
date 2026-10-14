@@ -230,7 +230,7 @@ contains
   USE nr_utils,       only: match_index
   USE init_mizuRoute, only: init_mizuroute_domain
   USE nr_type, only: i8b
-  USE routing_parallel, only: collect_runoff_ids, plan_routing
+  USE routing_parallel, only: collect_runoff_ids
   USE globalData, only: masterproc
 
   type(summa1_type_dec), intent(inout) :: summaStruct
@@ -300,8 +300,6 @@ contains
                              ierr, cmessage)
   if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
 
-  call plan_routing(domain%river_network, domain%remap%routing, info%do_remapping, ierr, cmessage)
-  if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
 
   end associate
   
@@ -342,7 +340,7 @@ contains
                         domain%river_network%core%runoff%sim, ierr, cmessage)
     if(ierr/=0)then; message=trim(message)//trim(cmessage); return; endif
 
-    ! Route the complete runoff field
+    ! Route the local domain, exchanging current upstream boundary discharge.
     call network_routing(idx_buff,             &
                          domain%river_network, &
                          domain%remap%routing, &
@@ -407,8 +405,6 @@ contains
 
   ierr = 0
   message = 'write_mizuroute_output_from_summa/'
-
-  if(summaStruct%parallel%rank /= 0) return
 
   call write_mizuroute_output(ncid,                    &
                               istart,                   &

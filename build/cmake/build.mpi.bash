@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 # Build MPI SUMMA + coupled mizuRoute without deleting existing build trees.
+
+export FC=/opt/homebrew/bin/gfortran
+export LIBRARY_LINKS=-llapack 
+
 set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export FC="${FC:-$(command -v gfortran)}"

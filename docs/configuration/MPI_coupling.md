@@ -44,7 +44,8 @@ wave), `"4"` (Muskingum–Cunge), or `"5"` (diffusive wave).
 ## Ownership and communication
 
 1. Gather GRU IDs and counts using the communicator and actual rank ownership
-   supplied by SUMMA. Gather each rank's runoff vector once per SUMMA timestep.
+   supplied by SUMMA. Build a sparse runoff request list during initialization;
+   exchange only requested GRU values using `MPI_Alltoallv` each SUMMA timestep.
 2. Assign each reach to the rank supplying the largest share of its local basin
    area, using the existing remapping and HRU-to-reach weights. Ties select the
    lowest rank. With the Bow at Banff one-to-one GRU/basin mapping, reach ownership
@@ -52,11 +53,14 @@ wave), `"4"` (Muskingum–Cunge), or `"5"` (diffusive wave).
    inherit downstream ownership where available, then upstream ownership, with
    rank zero as the final fallback.
 3. Build upstream-to-downstream dependency stages. Each rank advances only its
-   owned reaches at each stage. Broadcast discharge for cross-rank river edges
-   before downstream processing, separately for each routing substep. Internal
-   method state stays on the rank advancing that reach.
-4. Combine the owned reach discharges for output. Rank zero alone writes the full
-   network's routing variables and any augmented topology file.
+   owned reaches at each stage. Send discharge directly from each upstream owner
+   to its downstream owner before downstream processing, separately for each
+   routing substep. Nonblocking sends/receives are completed before using the
+   boundary data. Internal method state stays on the rank advancing that reach.
+4. Gather each output timestep to rank zero, restore the original global order,
+   and write the full network's routing variables. Output history buffers remain
+   local even with `writeFullSeries`; rank zero uses only one global timestep
+   of temporary output storage. Rank zero also writes any augmented topology file.
 
 The no-remapping path also matches basin IDs to GRU IDs explicitly; it no longer
 assumes that NetCDF arrays have identical ordering. Remapping must cover all
@@ -100,18 +104,44 @@ ownership, checks finite and unmasked routing output, and exercises:
 - buffered output and per-timestep output;
 - the configured outlet subset and rank-zero topology generation;
 - differing ID order with remapping disabled;
+- cross-rank weighted runoff remapping and ranks with no owned routing reaches;
+- allocated reach/ghost/HRU counts against expected ownership;
 - a rank-local output failure, with a timeout to detect MPI hangs.
 
 Model errors in the MPI driver now abort the MPI job rather than leaving other
 ranks blocked in collectives.
 
-## Current scaling limits
+## Memory layout and remaining scaling limits
 
-This implementation replicates topology, allocated routing state/ghost storage,
-and output buffers across ranks. Runoff is all-gathered, boundary discharges are
-broadcast, and discharge output is all-reduced. It distributes reach computation,
-but does not reduce per-rank routing storage in proportion to rank count. A long
-main stem limits concurrency, and preserving SUMMA's partition can leave routing
-work unevenly distributed. Correctness tests are not a speedup benchmark;
-large-domain scaling needs separate measurement. Sparse ghost storage and
-neighbor-only communication would be further work.
+Ownership is planned before allocating routing states and output buffers. Each
+rank retains:
+
+- parameters, topology, solver states, lateral inflows, and discharge history for
+  its owned reaches only;
+- routing HRUs and remapping rows belonging to those reaches (disconnected HRUs
+  are assigned to rank zero so their output is preserved);
+- only the host GRU runoff values required by its local remapping rows;
+- flux entries for immediate remote upstream reaches, containing the received
+  discharge but no ghost solver states, parameters, or HRU data;
+- local dependency-stage lists and cross-rank boundary communication schedules.
+
+Global topology indices are translated to local indices. Owned reaches come
+first in the flux array, followed by upstream ghost entries. The supported
+KW/MC/DW kernels are unchanged and consume current-substep upstream discharge.
+Only rank zero retains global output coordinates, ownership, and gather indices;
+other ranks do not retain global reach/HRU maps during timestepping.
+
+For the Bow at Banff four-rank partition, allocated reach states and routing HRUs
+are 13, 13, 13, and 12 per rank. Additional ghost flux entries are 14, 17, 0, and 0.
+Startup logs report the actual allocated state, ghost-flux, and HRU counts.
+
+**Initialization still temporarily reads and derives the full hydrofabric on each
+rank.** Those topology/remapping structures are compacted and released before
+allocating solver states or output buffers. This reduces steady-state memory,
+but does not eliminate the global topology initialization memory peak. A
+root-reader/scatter or partitioned hydrofabric reader would be a separate change.
+
+A long main stem limits concurrency, and preserving SUMMA's partition can leave
+routing work unevenly distributed or create many boundary edges. Correctness
+tests are not a speedup or peak-memory benchmark. Root output gathering and
+per-rank communication-count arrays also remain scaling costs.
