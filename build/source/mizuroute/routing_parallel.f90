@@ -21,6 +21,13 @@ module routing_parallel
   public :: routing_connectivity, share_initial_network
   public :: collect_runoff_ids, collect_runoff, plan_routing, localize_routing, exchange_level, gather_output
 contains
+  function wall_seconds() result(seconds)
+    real(dp) :: seconds
+    integer(i8b) :: ticks, rate
+    call system_clock(ticks,rate)
+    seconds=real(ticks,dp)/real(rate,dp)
+  end function
+
 
   ! Root exports flat connectivity, then discards legacy topology immediately.
   ! Workers never allocate var(:)%dat(:) for the global hydrofabric.
@@ -525,18 +532,21 @@ contains
   end subroutine
 
   subroutine collect_runoff(p, local_runoff, runoff, ierr, message)
-    type(routing_parallel_data), intent(in) :: p
+    type(routing_parallel_data), intent(inout) :: p
     real(dp), intent(in) :: local_runoff(:)
     real(dp), intent(out) :: runoff(:)
     integer, intent(out) :: ierr
     character(*), intent(out) :: message
     real(dp), allocatable :: send(:)
+    real(dp) :: started
     ierr=0; message='collect_runoff/'
     send=local_runoff(p%send_index)
 #ifdef ROUTING_MPI
     if(p%nproc>1) then
+      started=wall_seconds()
       call MPI_Alltoallv(send,p%send_counts,p%send_offsets,MPI_DOUBLE_PRECISION, &
                          runoff,p%recv_counts,p%recv_offsets,MPI_DOUBLE_PRECISION,p%comm,ierr)
+      p%runoff_mpi_seconds=p%runoff_mpi_seconds+wall_seconds()-started
       return
     endif
 #endif
@@ -941,19 +951,23 @@ contains
   end subroutine
 
   ! One output timestep at a time: O(global domain) scratch only on rank zero.
-  subroutine gather_output(p, layout, local, global, ierr)
+  subroutine gather_output(p, layout, local, global, ierr, mpi_seconds)
     type(routing_parallel_data), intent(in) :: p
     type(routing_gather), intent(in) :: layout
     real(dp), intent(in) :: local(:)
     real(dp), allocatable, intent(out) :: global(:)
     integer, intent(out) :: ierr
     real(dp), allocatable :: packed(:)
-    ierr=0
+    real(dp), intent(out) :: mpi_seconds
+    real(dp) :: started
+    ierr=0; mpi_seconds=0._dp
     allocate(packed(size(layout%index)),global(size(layout%index)))
 #ifdef ROUTING_MPI
     if(p%nproc>1) then
+      started=wall_seconds()
       call MPI_Gatherv(local,size(local),MPI_DOUBLE_PRECISION,packed,layout%counts,layout%offsets, &
                        MPI_DOUBLE_PRECISION,0,p%comm,ierr)
+      mpi_seconds=wall_seconds()-started
       if(ierr/=0) return
     else
 #endif
@@ -971,6 +985,7 @@ contains
     character(*), intent(out) :: message
 #ifdef ROUTING_MPI
     integer :: k, j, n
+    real(dp) :: started
     integer, allocatable :: request(:), status(:,:)
     real(dp), allocatable, asynchronous :: values(:)
 #endif
@@ -979,6 +994,7 @@ contains
     associate(p=>net%driver%parallel)
     if(p%nproc==1) return
     n=count(p%edge_stage==stage)
+    if(n==0) return
     allocate(request(n),status(MPI_STATUS_SIZE,n),values(n))
     j=0
     do k=1,size(p%edge_stage)
@@ -992,7 +1008,9 @@ contains
       endif
       if(ierr/=0) return
     enddo
+    started=wall_seconds()
     call MPI_Waitall(n,request,status,ierr)
+    p%boundary_wait_seconds=p%boundary_wait_seconds+wall_seconds()-started
     if(ierr/=0) return
     j=0
     do k=1,size(p%edge_stage)

@@ -120,7 +120,7 @@ subroutine summa_initialize(summa1_struc, err, message)
   USE globalData,only:elapsedInit                             ! elapsed time for the initialization
   USE globalData,only:elapsedRead                             ! elapsed time for the data read
   USE globalData,only:elapsedWrite                            ! elapsed time for the stats/write
-  USE globalData,only:elapsedPhysics                          ! elapsed time for the physics
+  USE globalData,only:elapsedPhysics,elapsedRouting                          ! elapsed time for the physics
   ! model time structures
   USE globalData,only:startTime                               ! start time
   USE globalData,only:finshTime                               ! end time
@@ -228,6 +228,7 @@ subroutine summa_initialize(summa1_struc, err, message)
     elapsedRead=0._rkind
     elapsedWrite=0._rkind
     elapsedPhysics=0._rkind
+    elapsedRouting=0._rkind
 
     ! get the command line arguments
     call getCommandArguments(summa1_struc,err,cmessage)

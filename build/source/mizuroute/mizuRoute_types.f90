@@ -177,6 +177,8 @@ module mizuroute_types
     integer(i4b) :: comm = -1, rank = 0, nproc = 1
     integer(i4b), allocatable :: counts(:), offsets(:), host_owner(:)
     integer(i4b), allocatable :: owner(:), level_order(:), level_start(:), runoff_index(:)
+    ! Timestepping MPI durations (communication plus waiting), in wall seconds.
+    real(wp) :: runoff_mpi_seconds = 0._wp, boundary_wait_seconds = 0._wp, output_mpi_seconds = 0._wp
     integer(i4b) :: n_local = 0, n_ghost = 0
     integer(i4b), allocatable :: send_counts(:), send_offsets(:), recv_counts(:), recv_offsets(:), send_index(:)
     integer(i4b), allocatable :: edge_local(:), edge_peer(:), edge_stage(:)

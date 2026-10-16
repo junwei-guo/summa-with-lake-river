@@ -146,12 +146,13 @@ contains
     integer(i4b),            intent(in)  :: istart
     integer(i4b),            intent(in)  :: numtim
     type(mizuroute_info),    intent(in)  :: info
-    type(mizuroute_domain),  intent(in)  :: domain
+    type(mizuroute_domain),  intent(inout)  :: domain
     integer(i4b),            intent(out) :: ierr
     character(*),            intent(out) :: message
   
     integer(i4b) :: varid_qbasin, varid_Qreach, t, iRoute
     real(dp), allocatable :: basin(:), discharge(:)
+    real(dp) :: mpi_seconds
 
     ierr = 0
     message = 'write_mizuroute_output/'
@@ -163,14 +164,16 @@ contains
       if(ierr/=nf90_noerr) then; message=trim(message)//trim(nf90_strerror(ierr)); return; endif
     endif
     do t=1,numtim
-      call gather_output(p,p%basins,net%driver%basin_runoff(:,t),basin,ierr)
+      call gather_output(p,p%basins,net%driver%basin_runoff(:,t),basin,ierr,mpi_seconds)
+      p%output_mpi_seconds=p%output_mpi_seconds+mpi_seconds
       if(ierr/=0) return
       if(p%rank==0) then
         ierr=nf90_put_var(ncid,varid_qbasin,basin,start=[1,istart+t-1],count=[info%n_hru,1])
         if(ierr/=nf90_noerr) then; message=trim(message)//trim(nf90_strerror(ierr)); return; endif
       endif
       do iRoute=1,size(net%driver%method)
-        call gather_output(p,p%reaches,net%driver%method(iRoute)%streamflow(:,t),discharge,ierr)
+        call gather_output(p,p%reaches,net%driver%method(iRoute)%streamflow(:,t),discharge,ierr,mpi_seconds)
+        p%output_mpi_seconds=p%output_mpi_seconds+mpi_seconds
         if(ierr/=0) return
         if(p%rank==0) then
           ierr=nf90_put_var(ncid,varid_Qreach,discharge,start=[iRoute,1,istart+t-1],count=[1,info%n_seg,1])

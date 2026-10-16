@@ -3,6 +3,10 @@
 set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export FC="${FC:-$(command -v gfortran)}"
+
+export FC=/opt/homebrew/bin/gfortran
+export LIBRARY_LINKS=-llapack
+
 options=(-DUSE_MPI=ON -DUSE_MIZUROUTE=ON -DUSE_SUNDIALS=OFF
          "-DCMAKE_BUILD_TYPE=${BUILD_TYPE:-Release}")
 if [[ -n "${LIBRARY_LINKS:-}" ]]; then

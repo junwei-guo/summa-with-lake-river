@@ -16,6 +16,41 @@ import numpy as np
 from netCDF4 import Dataset
 
 
+def check_timing(log, ranks):
+    """Check accounting and collective statistics, allowing printed rounding."""
+    if not ranks:
+        assert 'elapsed routing =' in log
+        return
+    assert log.count('MPI timing summary: ranks =') == 1
+    assert f'MPI timing summary: ranks = {ranks}' in log
+    assert 'elapsed physics =' not in log  # no second rank-zero-only summary
+    rows = {}
+    for line in log.splitlines():
+        match = re.fullmatch(r'\s*([A-Za-z][A-Za-z ()/.-]*?)\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)', line)
+        if match:
+            rows[match[1].strip()] = np.array([float(match[i]) for i in range(2, 6)])
+    components = ['initialization', 'parameter setup', 'restart read', 'forcing read', 'output/stats',
+                  'GRU physics', 'routing (inclusive)', 'end-of-run wait', 'other driver work']
+    assert len(rows) == 15, rows
+    total = rows['total elapsed'][0]
+    assert total > 0
+    for name, (mean, minimum, maximum, percent) in rows.items():
+        assert 0 <= minimum <= mean + 1e-6 and mean <= maximum + 1e-6, (name, rows[name])
+        np.testing.assert_allclose(percent, 100 * mean / total, atol=0.002, rtol=0)
+        if ranks == 1:
+            np.testing.assert_array_equal([mean, mean], [minimum, maximum])
+    np.testing.assert_allclose(sum(rows[k][0] for k in components), total, atol=1e-5, rtol=0)
+    np.testing.assert_allclose(rows['routing outside MPI waits'][0] + rows['runoff MPI exchange'][0] +
+                               rows['boundary MPI wait'][0], rows['routing (inclusive)'][0], atol=1e-5, rtol=0)
+    assert rows['output MPI gather'][0] <= rows['output/stats'][0] + 1e-6
+    np.testing.assert_allclose(rows['MPI time incl. end wait'][0], sum(rows[k][0] for k in
+                              ['runoff MPI exchange', 'boundary MPI wait', 'output MPI gather', 'end-of-run wait']),
+                               atol=1e-5, rtol=0)
+    if ranks == 1:
+        for name in ['runoff MPI exchange', 'boundary MPI wait', 'output MPI gather']:
+            assert rows[name][0] == 0
+
+
 def run_case(root, work, name, ranks, methods, dt, remap=True, buffered=False,
              augmented=False, mapping="identity", open_water=False):
     case = work / name
@@ -89,6 +124,7 @@ def run_case(root, work, name, ranks, methods, dt, remap=True, buffered=False,
         result = subprocess.run(command, cwd=root, stdout=log, stderr=subprocess.STDOUT, timeout=180)
     if result.returncode or 'finished simulation successfully' not in (case/'run.log').read_text():
         raise RuntimeError(f'{name} failed; see {case / "run.log"}')
+    check_timing((case / 'run.log').read_text(), ranks)
     if augmented:
         with Dataset(case / 'topology_new.nc') as nc:
             assert len(nc.dimensions['seg']) == 51

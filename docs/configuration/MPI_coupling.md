@@ -181,3 +181,38 @@ A long main stem limits concurrency, and preserving SUMMA's partition can leave
 routing work unevenly distributed or create many boundary edges. Correctness
 tests are not a speedup or peak-memory benchmark. Root output gathering and
 per-rank communication-count arrays also remain scaling costs.
+
+## Runtime timing report
+
+On normal completion, the MPI driver prints one summary with **mean, minimum,
+and maximum wall seconds across all ranks**, plus each mean as a percentage of
+the mean total. This replaces the previous rank-zero-only timing summary.
+Initialization, parameter setup, restart reads, forcing reads, output/statistics,
+GRU physics, routing, the end-of-run wait, and other driver work are separate
+rows. GRU physics no longer includes the routing call. Serial runs also report
+routing separately in their existing timing summary.
+
+Routing includes runoff transfer/remapping, reach routing, and boundary exchange.
+Additional rows describe subsets of these durations; do not add them to total:
+
+- **runoff MPI exchange**: time inside runtime `MPI_Alltoallv`;
+- **boundary MPI wait**: time inside `MPI_Waitall` after posting boundary messages;
+- **output MPI gather**: time inside routing output `MPI_Gatherv` calls, already
+  included in output/statistics;
+- **MPI time incl. end wait**: the sum of those three durations and the final wait;
+- **routing outside MPI waits**: inclusive routing minus runoff exchange and
+  boundary wait; includes local calculations, packing, and message posting.
+
+MPI call durations include communication and waiting for other ranks. They are
+an indicator of synchronization cost, **not a measurement of pure idle time**.
+Initialization MPI calls are included in initialization but are not separately
+classified as waits. Per-component maxima may belong to different ranks and
+should not be summed to estimate job runtime.
+
+Timing uses monotonic wall clocks. No barriers are added to the timestep loop.
+One barrier after the loop measures each rank's wait for the slowest rank. Total
+elapsed includes that end wait and excludes MPI startup, reporting reductions,
+the existing cleanup sleep, final file closure, and `MPI_Finalize`. The maximum
+total is the reported model-phase wall time; the percentage column uses
+`100 * mean(component) / mean(total)`. Output/statistics measures application I/O
+calls and statistics work, not storage-device throughput.
