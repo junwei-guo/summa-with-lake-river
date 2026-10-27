@@ -23,6 +23,7 @@ module mizuroute_types
   public :: mizuroute_info
 
   public :: routing_time_data
+  public :: routing_parallel_data
   public :: mizuroute_topology
   public :: river_network_data
   public :: spatial_remap_data
@@ -166,7 +167,17 @@ module mizuroute_types
     real(wp),               allocatable  :: streamflow(:,:) 
   end type routing_output
 
+  ! Only rank zero owns global runoff and river states. Other ranks hold counts
+  ! for the runoff gather and timing counters; no per-reach state is replicated.
+  type :: routing_parallel_data
+    integer(i4b) :: comm=-1, rank=0, nproc=1
+    integer(i4b), allocatable :: counts(:), offsets(:), runoff_index(:)
+    real(wp) :: runoff_mpi_seconds=0._wp, boundary_wait_seconds=0._wp
+    real(wp) :: output_mpi_seconds=0._wp, routing_compute_seconds=0._wp
+  end type
+
   type :: river_network_driver
+    type(routing_parallel_data) :: parallel
 
     ! IDs used by the driver
     integer(i4b), allocatable :: hru_id(:)

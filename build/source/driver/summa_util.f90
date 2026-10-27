@@ -355,7 +355,7 @@ contains
  ! **************************************************************************************************
  ! stop_program: stop program execution
  ! **************************************************************************************************
- subroutine stop_program(err,message)
+ subroutine stop_program(err,message,report_timing)
  ! used to stop program execution
  ! desired modules
  USE netcdf                                            ! netcdf libraries
@@ -368,11 +368,13 @@ contains
  USE globalData,only: elapsedRestart                   ! elapsed time to read the restart data
  USE globalData,only: elapsedRead                      ! elapsed time for the data read
  USE globalData,only: elapsedWrite                     ! elapsed time for the stats/write
- USE globalData,only: elapsedPhysics                   ! elapsed time for the physics
+ USE globalData,only: elapsedPhysics,elapsedRouting                   ! elapsed time for the physics
  implicit none
  ! define dummy variables
  integer(i4b),intent(in)            :: err             ! error code
  character(*),intent(in)            :: message         ! error messgage
+ logical,optional,intent(in) :: report_timing
+ logical :: show_timing
  ! define the local variables
  integer(i4b),parameter             :: outunit=6       ! write to screen
  integer(i4b)                       :: endModelRun(8)  ! final time
@@ -386,9 +388,12 @@ contains
   if (ncid(iFreq)/=integerMissing) localErr = nf90_close(ncid(iFreq))
  end do
 #ifndef NGEN_ACTIVE
+ show_timing=.true.
+ if(present(report_timing)) show_timing=report_timing
+ if(show_timing) then
  ! get the final date and time
  call date_and_time(values=endModelRun)
- elpSec = elapsedSec(startInit,endModelRun)
+ elpSec = max(elapsedSec(startInit,endModelRun),tiny(1._rkind))
 
  ! print initial and final date and time
  write(outunit,"(/,A,I4,'-',I2.2,'-',I2.2,2x,I2,':',I2.2,':',I2.2,'.',I3.3)") 'initial date/time = ',startInit(1:3),  startInit(5:8)
@@ -418,6 +423,9 @@ contains
  write(outunit,"(/,A,1PG15.7,A)")                                             '  elapsed physics = ', elapsedPhysics,        ' s'
  write(outunit,"(A,1PG15.7)")                                                 ' fraction physics = ', elapsedPhysics/elpSec
 
+ write(outunit,"(/,A,1PG15.7,A)") '  elapsed routing = ', elapsedRouting, ' s'
+ write(outunit,"(A,1PG15.7)")     ' fraction routing = ', elapsedRouting/elpSec
+
  ! print total elapsed time
  write(outunit,"(/,A,1PG15.7,A)")                                             '     elapsed time = ', elpSec,                ' s'
  write(outunit,"(A,1PG15.7,A)")                                               '       or           ', elpSec/60_rkind,          ' m'
@@ -426,6 +434,7 @@ contains
 
  ! print the number of threads
  write(outunit,"(A,i10,/)")                                                   '   number threads = ', nThreads
+ endif ! show_timing
 #endif
  ! stop with message
  if(err==0)then

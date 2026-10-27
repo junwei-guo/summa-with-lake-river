@@ -88,6 +88,7 @@ module summabmi
   USE globalData, only: elapsedRead                           ! elapsed time for the forcing data read
   USE globalData, only: elapsedWrite                          ! elapsed time for the stats/write
   USE globalData, only: elapsedPhysics                        ! elapsed time for the physics
+  USE globalData, only: elapsedRouting                        ! elapsed time for routing
   USE multiconst, only: secprday                              ! number of seconds in a day
   ! provide access to the named variables that describe elements of parent model structures
   USE var_lookup, only: iLookTIME                             ! named variables for time data structure
@@ -134,6 +135,7 @@ module summabmi
      real(rkind)                        :: elapsedRead                       ! elapsed time for the forcing data read
      real(rkind)                        :: elapsedWrite                      ! elapsed time for the stats/write
      real(rkind)                        :: elapsedPhysics                    ! elapsed time for the physics
+     real(rkind)                        :: elapsedRouting                    ! elapsed time for routing
   end type summa_model
 
   type, extends (bmi) :: summa_bmi
@@ -338,6 +340,7 @@ module summabmi
      this%model%elapsedRead = elapsedRead
      this%model%elapsedWrite = elapsedWrite
      this%model%elapsedPhysics = elapsedPhysics
+     this%model%elapsedRouting = elapsedRouting
      bmi_status = BMI_SUCCESS
    end function summa_bmi_initialize
 
@@ -383,6 +386,7 @@ module summabmi
      elapsedRead = this%model%elapsedRead
      elapsedWrite = this%model%elapsedWrite
      elapsedPhysics = this%model%elapsedPhysics
+     elapsedRouting = this%model%elapsedRouting
      ! initialize global variables that change during the model simulation and are not initialized before the first time step
      if(this%model%timeStep >1)then
        this%model%nHRUrun = nHRUrun
@@ -429,6 +433,7 @@ module summabmi
      this%model%elapsedRead = elapsedRead
      this%model%elapsedWrite = elapsedWrite
      this%model%elapsedPhysics = elapsedPhysics
+     this%model%elapsedRouting = elapsedRouting
      bmi_status = BMI_SUCCESS
    end function summa_update
 
@@ -470,6 +475,7 @@ module summabmi
      elapsedRead = this%model%elapsedRead
      elapsedWrite = this%model%elapsedWrite
      elapsedPhysics = this%model%elapsedPhysics
+     elapsedRouting = this%model%elapsedRouting
 
      call stop_program(0, 'finished simulation successfully.')
      ! to prevent exiting before HDF5 has closed

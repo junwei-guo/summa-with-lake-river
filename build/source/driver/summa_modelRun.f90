@@ -69,7 +69,7 @@ contains
  USE globalData,only:gru_struc                                  ! gru-hru mapping structures
  USE globalData,only:model_decisions                            ! model decision structure
  USE globalData,only:startPhysics,endPhysics                    ! date/time for the start and end of the initialization
- USE globalData,only:elapsedPhysics                             ! elapsed time for the initialization
+ USE globalData,only:elapsedPhysics,elapsedRouting                             ! elapsed time for the initialization
  USE globalData,only:fracJulDay,yearLength
  ! ---------------------------------------------------------------------------------------
  ! * variables
@@ -93,6 +93,7 @@ contains
  integer(i4b), allocatable             :: ixExpense(:)          ! ranked index GRU w.r.t. computational expense
  integer(i4b), allocatable             :: totalFluxCalls(:)     ! total number of flux calls for each GRU
  ! local variables: timing information
+ integer(i8b) :: phaseStart, phaseEnd, clockRate
  integer*8                             :: openMPstart,openMPend ! time for the start of the parallelization section
  integer*8, allocatable                :: timeGRUstart(:)       ! time GRUs start
  real(rkind),  allocatable             :: timeGRUcompleted(:)   ! time required to complete each GRU
@@ -172,6 +173,7 @@ contains
 
  ! initialize the start of the physics
  call date_and_time(values=startPhysics)
+ call system_clock(phaseStart,clockRate)
 
  ! ----- rank the GRUs in terms of their anticipated computational expense -----
 
@@ -295,8 +297,12 @@ contains
  end associate summaVars2
  !$omp end parallel
 
+ call system_clock(phaseEnd)
+ elapsedPhysics=elapsedPhysics+real(phaseEnd-phaseStart,rkind)/real(clockRate,rkind)
+
  ! ----- network routing ----------------------------------------------------
  if (mizuroute_active) then
+   call system_clock(phaseStart)
 
    ! transfer routed runoff from summa into the coupling structure to pass to mizuRoute
    do iGRU = 1,summa1_struc%nGRU_local
@@ -306,13 +312,13 @@ contains
    call route_mizuroute_from_summa(modelTimeStep, summa1_struc, err, cmessage)
    if(err/=0)then; message=trim(message)//trim(cmessage); return; endif
    
+   call system_clock(phaseEnd)
+   elapsedRouting=elapsedRouting+real(phaseEnd-phaseStart,rkind)/real(clockRate,rkind)
  endif  ! (if mizuRoute is active)
 
  ! identify the end of the physics
  call date_and_time(values=endPhysics)
 
- ! aggregate the elapsed time for the physics
- elapsedPhysics = elapsedPhysics + elapsedSec(startPhysics, endPhysics)
 
  ! deallocate space used to determine the GRU computational expense
  deallocate(totalFluxCalls, ixExpense, timeGRU, stat=err)

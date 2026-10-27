@@ -126,11 +126,7 @@ contains
 
   ! ----- check mizuRoute execution constraints -----
 
-  if (mizuroute_active .and. summaStruct%parallel%size > 1) then
-    message=trim(message)//'Coupled mizuRoute does not support SUMMA domain parallelization; '// &
-                           'use standalone mizuRoute for parallel river routing.'
-    err=20; return
-  endif
+  ! Domain-parallel SUMMA now gathers runoff to the sole routing owner (rank 0).
 
   if (mizuroute_active .and. iRunMode /= iRunModeFull) then
     message=trim(message)//'The -g subdomain option cannot be used with coupled mizuRoute because '// &

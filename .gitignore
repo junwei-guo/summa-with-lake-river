@@ -53,6 +53,8 @@ site/
 
 # cmake_build containing cmake build objects
 build/cmake_build
+build/cmake_mpi/
+__pycache__/
 runinfo.txt
 
 # OpenWQ source code

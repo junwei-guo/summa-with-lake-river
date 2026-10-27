@@ -66,7 +66,12 @@ contains
                         ierr, cmessage)                            ! output: error control
       if (ierr /= 0) then; message = trim(message)//trim(cmessage); return; end if
     else
-      river_network%core%runoff%basinRunoff = river_network%core%runoff%sim
+      river_network%core%runoff%basinRunoff = &
+        river_network%core%runoff%sim(river_network%driver%parallel%runoff_index)
+      ! Match standalone sort_runoff for inactive-water/missing runoff.
+      where(.not.(river_network%core%runoff%basinRunoff > -1.e-6_dp))
+        river_network%core%runoff%basinRunoff=0._dp
+      end where
     end if
 
     ! save basin runoff for host-model output

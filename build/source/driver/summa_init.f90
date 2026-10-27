@@ -120,7 +120,7 @@ subroutine summa_initialize(summa1_struc, err, message)
   USE globalData,only:elapsedInit                             ! elapsed time for the initialization
   USE globalData,only:elapsedRead                             ! elapsed time for the data read
   USE globalData,only:elapsedWrite                            ! elapsed time for the stats/write
-  USE globalData,only:elapsedPhysics                          ! elapsed time for the physics
+  USE globalData,only:elapsedPhysics,elapsedRouting                          ! elapsed time for the physics
   ! model time structures
   USE globalData,only:startTime                               ! start time
   USE globalData,only:finshTime                               ! end time
@@ -228,6 +228,7 @@ subroutine summa_initialize(summa1_struc, err, message)
     elapsedRead=0._rkind
     elapsedWrite=0._rkind
     elapsedPhysics=0._rkind
+    elapsedRouting=0._rkind
 
     ! get the command line arguments
     call getCommandArguments(summa1_struc,err,cmessage)
@@ -297,7 +298,7 @@ subroutine summa_initialize(summa1_struc, err, message)
     ! *** define the local spatial domain
     ! *****************************************************************************
 
-    ! Partition the GRUs in the run domain evenly across the available ranks.
+    ! Partition GRUs, reserving root for routing in a coupled MPI run.
     ! startGRU_local is the file index of the first GRU assigned to this rank
     ! and nGRU_local is the number of GRUs assigned to this rank. For a serial
     ! run, the local GRU range is identical to the run domain.
@@ -308,10 +309,26 @@ subroutine summa_initialize(summa1_struc, err, message)
     ! define start and count indices for each local rank
     if(iRunMode /= iRunModeHRU)then
     
-      call balance_even(startGRU_domain, nGRU_domain, &
-                        parallel%rank, parallel%size, &
-                        startGRU_local, nGRU_local, &
-                        err, cmessage)
+      if(mizuroute_active .and. parallel%size>1) then
+        ! Reserve root for river routing, keeping just one GRU because SUMMA's
+        ! existing initialization and output paths require a nonempty domain.
+        if(nGRU_domain<parallel%size) then
+          err=20; message=trim(message)//'coupled MPI needs at least one GRU per rank'; return
+        endif
+        if(parallel%rank==0) then
+          startGRU_local=startGRU_domain
+          nGRU_local=1
+        else
+          call balance_even(startGRU_domain+1, nGRU_domain-1, &
+                            parallel%rank-1, parallel%size-1, &
+                            startGRU_local, nGRU_local, err, cmessage)
+        endif
+      else
+        call balance_even(startGRU_domain, nGRU_domain, &
+                          parallel%rank, parallel%size, &
+                          startGRU_local, nGRU_local, &
+                          err, cmessage)
+      endif
       if(err/=0)then; message=trim(message)//trim(cmessage); return; endif
 
     else

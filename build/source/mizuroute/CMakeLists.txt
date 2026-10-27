@@ -7,6 +7,7 @@ set(MIZU_TYPE
 )
 
 set(MIZU_BASE
+    ${SUMMA_MIZU_DIR}/root_routing.f90
     ${MIZU_DIR}/var_lookup.f90
     ${MIZU_DIR}/nr_utils.f90
     ${MIZU_DIR}/gamma_func.f90
